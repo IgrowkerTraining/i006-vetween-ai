@@ -151,15 +151,25 @@ class AIService:
             #generated_text = data["choices"][0]["message"]["content"]
 
             return data
-            
+        # Manejo manual de errores al comunicarse con IA  
+        except httpx.TimeoutException:
+            logger.error("Timeout en OpenRouter")
+            raise ValueError("AI_TIMEOUT")
+
         except httpx.HTTPStatusError as e:
-            error_msg = f"OpenRouter API error: {e.response.status_code} - {e.response.text}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
+            status_code = e.response.status_code
+            logger.error(f"Error {status_code} de OpenRouter: {e.response.text}")
+            
+            if status_code == 401:
+                raise ValueError("AI_AUTH_ERROR")
+            elif status_code == 422:
+                raise ValueError("AI_VALIDATION_ERROR") 
+            else:
+                raise ValueError("AI_PROVIDER_ERROR")
+
         except Exception as e:
-            error_msg = f"Error calling OpenRouter API: {str(e)}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
+            logger.error(f"Error inesperado: {str(e)}")
+            raise ValueError("AI_UNKNOWN_ERROR")
 
 
 

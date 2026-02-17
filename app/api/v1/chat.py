@@ -1,6 +1,6 @@
 """Chat-related API endpoints."""
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends,status
 from typing import List
 
 from app.models.schemas import ChatResponse, ResumeniaRequest, ResumeniaResponse, ModelInfo
@@ -71,7 +71,36 @@ async def guardar_datosDB(request: ResumeniaRequest):
 # Endpoint provisorio para Response IA
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai_service)):
-    data = await ai_service.chat(request)
-    return{
-        "data": data
-    }
+    try:
+        logger.info(f"Resumen request for model: {request.model}")
+        data = await ai_service.chat(request)
+        return{
+            "data": data
+        }
+    # Manejo de errores al comunicarse con IA
+    except ValueError as e:
+        error_msg = str(e)
+        
+        if error_msg == "AI_TIMEOUT":
+            raise HTTPException(
+                status_code=status.HTTP_408_REQUEST_TIMEOUT, 
+                detail="La IA está tardando demasiado. Por favor, intenta de nuevo."
+            )
+        elif error_msg == "AI_AUTH_ERROR":
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail="Error de configuración interna (Auth)."
+            )
+        elif error_msg == "AI_VALIDATION_ERROR":
+            raise HTTPException(status_code=422, detail="La IA rechazo los datos por formato invalido.")
+        
+        elif error_msg == "AI_PROVIDER_ERROR":
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY, 
+                detail="El servicio de IA no está disponible en este momento."
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail="Ocurrió un error inesperado al procesar la IA."
+            )
