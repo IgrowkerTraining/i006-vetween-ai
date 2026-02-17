@@ -99,6 +99,12 @@ async def chat(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai
                 status_code=status.HTTP_502_BAD_GATEWAY, 
                 detail="El servicio de IA no está disponible en este momento."
             )
+        # Manejo de validacion de salida
+        elif error_msg == "AI_RESPONSE_INVALID":
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY, 
+                detail="La IA respondió correctamente pero el formato del resumen no es válido."
+            )
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 

@@ -148,6 +148,9 @@ class AIService:
             
             data = response.json()
             
+            # Verificamos que existan las claves que esperamos (la "salida")
+            if "choices" not in data or not data["choices"]:
+                raise ValueError("AI_RESPONSE_INVALID")
             #generated_text = data["choices"][0]["message"]["content"]
 
             return data
@@ -158,6 +161,7 @@ class AIService:
 
         except httpx.HTTPStatusError as e:
             status_code = e.response.status_code
+            print("aca badgateway")
             logger.error(f"Error {status_code} de OpenRouter: {e.response.text}")
             
             if status_code == 401:
