@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     
+    # Agrego la confifuración para acceder a la DB
+    # DB configuration
+    supabase_url: str = "https://qohfarniqorfuwazhdqj.supabase.co"
+    supabase_key: str
+
     # CORS Configuration
     cors_origins: list[str] = ["*"]
     cors_allow_credentials: bool = True

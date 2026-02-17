@@ -1,6 +1,6 @@
 """Pydantic models for request/response schemas."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field ,ConfigDict
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
@@ -11,24 +11,34 @@ class ChatMessage(BaseModel):
     content: str = Field(..., description="Message content")
 
 
-class ChatRequest(BaseModel):
+class ResumeniaRequest(BaseModel):
     """Chat completion request model."""
     model: str = Field(default="openai/gpt-3.5-turbo", description="AI model to use")
-    messages: List[ChatMessage] = Field(..., description="List of chat messages")
+    #messages: List[ChatMessage] = Field(..., description="List of chat messages")
+    
+    # Agrego las validaciones de las entradas para los campos de la DB
+    id_paciente: int = Field(... , description="ID del paciente")
+    datos_clinicos: Dict[str, Any] = Field(... , description="Historial clinico")
+
     max_tokens: Optional[int] = Field(default=1000, ge=1, le=4096, description="Maximum tokens to generate")
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0, description="Sampling temperature")
     stream: Optional[bool] = Field(default=False, description="Enable streaming response")
 
 
-class ChatResponse(BaseModel):
+class ResumeniaResponse(BaseModel):
     """Chat completion response model."""
-    id: str = Field(..., description="Response ID")
-    object: str = Field(default="chat.completion", description="Object type")
-    created: int = Field(..., description="Creation timestamp")
-    model: str = Field(..., description="Model used")
-    choices: List[Dict[str, Any]] = Field(..., description="Response choices")
+    # modifico y agrego los campos a validar segun la tabla de la DB y
+    id_resumenia: str = Field(..., description="Resumen ID")
+    id_paciente: int = Field(..., description="ID del paciente")
+    resumen_completo : str = Field(..., description="Resumen en texto plano")
+    resumen_estructurado: Dict[str,Any] = Field(..., description="Resumen JSON estructudado")
+    modelo: str = Field(..., description="Model used")
+    fecha_generacion: datetime = Field(default_factory=datetime.now, description="Fecha de creacion del resumen")
+    #object: str = Field(default="chat.completion", description="Object type")
+    
+    #choices: List[Dict[str, Any]] = Field(..., description="Response choices")
     usage: Optional[Dict[str, int]] = Field(default=None, description="Token usage information")
-
+    model_config = ConfigDict(from_attributes=True)
 
 class ModelInfo(BaseModel):
     """AI model information."""
@@ -59,3 +69,8 @@ class RootResponse(BaseModel):
     version: str = Field(..., description="Application version")
     docs: str = Field(..., description="Documentation URL")
     health: str = Field(..., description="Health check URL")
+
+
+# Schema provisorio para validar respuesta simple IA
+class ChatResponse(BaseModel):
+    data: Dict[str, Any] = Field(... , description="Respuesta IA")

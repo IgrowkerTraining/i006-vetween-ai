@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 
-from app.models.schemas import ChatRequest, ChatResponse, ModelInfo
+from app.models.schemas import ChatResponse, ResumeniaRequest, ResumeniaResponse, ModelInfo
 from app.services.ai_service import AIService
 from app.api.dependencies import get_ai_service
 from app.core.logging import get_logger
@@ -13,9 +13,9 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-@router.post("/completions", response_model=ChatResponse)
+@router.post("/completions", response_model=ResumeniaResponse)
 async def create_chat_completion(
-    request: ChatRequest,
+    request: ResumeniaRequest,
     ai_service: AIService = Depends(get_ai_service)
 ):
     """
@@ -49,3 +49,29 @@ async def list_models(ai_service: AIService = Depends(get_ai_service)):
     except Exception as e:
         logger.error(f"Error fetching models: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# Creación de endpoint provisoria para probar persistencia en DB
+@router.post("/request", response_model=dict)
+async def guardar_datosDB(request: ResumeniaRequest):
+    try:
+        guardar_request = await AIService.save_request(
+            request.id_paciente,
+            request.datos_clinicos
+        )
+
+        return {
+            "mensaje": "guardado correcto en base de datos",
+        
+            "status": "Creado"
+            }
+    except Exception as e:
+        logger.error(f"Error al cargar datos: {str(e)}")
+        raise HTTPException( detail=str(e))
+
+# Endpoint provisorio para Response IA
+@router.post("/chat", response_model=ChatResponse)
+async def chat(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai_service)):
+    data = await ai_service.chat(request)
+    return{
+        "data": data
+    }
