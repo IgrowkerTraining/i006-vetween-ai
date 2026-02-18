@@ -78,7 +78,7 @@ async def chat(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai
             request.datos_clinicos
         )
         
-        data = await ai_service.chat(request)
+        data = await ai_service.generar_resumenia(request)
         return data
     # Manejo de errores al comunicarse con IA
     except ValueError as e:

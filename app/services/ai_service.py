@@ -32,7 +32,7 @@ class AIService:
         logger.info(f"AI Service initialized with API key: {mask_api_key(settings.openrouter_api_key)}")  
     
         # Funcion para generar una respuesta simple de IA
-    async def chat(self, request: ResumeniaRequest) -> ResumeniaResponse :
+    async def generar_resumenia(self, request: ResumeniaRequest) -> ResumeniaResponse :
         """Create a chat completion using OpenRouter API."""
 
         system_prompt = """
