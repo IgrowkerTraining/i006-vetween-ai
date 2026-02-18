@@ -2,11 +2,12 @@
 
 import httpx
 import uuid
+import json
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from app.core.database import supabase
 from app.config.settings import settings
-from app.models.schemas import ChatResponse , ResumeniaRequest, ResumeniaResponse, ModelInfo
+from app.models.schemas import RequestsPaciente , ResumeniaRequest, ResumeniaResponse, ModelInfo
 from app.core.logging import get_logger
 from app.core.security import mask_api_key
 
@@ -28,14 +29,43 @@ class AIService:
             },
             timeout=60.0
         )
-        logger.info(f"AI Service initialized with API key: {mask_api_key(settings.openrouter_api_key)}")
+        logger.info(f"AI Service initialized with API key: {mask_api_key(settings.openrouter_api_key)}")  
     
-    async def chat_completion(self, request: ResumeniaRequest) -> ResumeniaResponse:
+        # Funcion para generar una respuesta simple de IA
+    async def chat(self, request: ResumeniaRequest) -> ResumeniaResponse :
         """Create a chat completion using OpenRouter API."""
-        
-        # Convert ChatMessage objects to dict format
-        messages = [{"role": msg.role, "content": msg.content} for msg in request.messages]
-        
+
+        system_prompt = """
+            Sos un asistente veterinario especializado en generar resúmenes clínicos profesionales.
+
+            Tu tarea es generar DOS salidas:
+            1) Un resumen clínico redactado en texto profesional.
+            2) Un resumen estructurado en formato JSON.
+
+            Reglas obligatorias:
+            - Responder siempre en español.
+            - No inventar información.
+            - No agregar texto fuera del JSON.
+            - La respuesta debe ser únicamente un JSON válido.
+
+            Formato obligatorio:
+
+            {
+            "resumen_completo": "Texto completo del resumen clínico",
+            "resumen_estructurado": {
+                "estado_general": "",
+                "tipo_paciente": "",
+                "descripcion_clinica": "",
+                "tratamiento_indicado": "",
+                "factores_riesgo": [],
+                "puntos_clave_proximas_consultas": []
+                }
+            }   
+            """
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Generá un resumen estructuradocon estos datos: {request.datos_clinicos}"}
+        ]
         payload = {
             "model": request.model,
             "messages": messages,
@@ -43,7 +73,7 @@ class AIService:
             "temperature": request.temperature,
             "stream": request.stream,
         }
-        
+
         try:
             logger.info(f"Sending chat completion request for model: {request.model}")
             response = await self.client.post("/chat/completions", json=payload)
@@ -51,26 +81,54 @@ class AIService:
             
             data = response.json()
             
-            chat_response = ResumeniaResponse(
-                id=data.get("id", str(uuid.uuid4())),
-                created=data.get("created", int(datetime.now().timestamp())),
-                model=data.get("model", request.model),
-                choices=data.get("choices", []),
-                usage=data.get("usage")
-            )
-            
-            logger.info(f"Chat completion successful: {chat_response.id}")
-            return chat_response
-            
+            # Verificamos que existan las claves que esperamos (la "salida")
+            if "choices" not in data or not data["choices"]:
+                raise ValueError("AI_RESPONSE_INVALID")
+            content = data["choices"][0]["message"]["content"]
+
+            ia_output = json.loads(content)
+            resumen_completo = ia_output["resumen_completo"]
+            resumen_estructurado = ia_output["resumen_estructurado"]
+
+            db_response = await supabase.table("resumen_ia").insert({
+                "id_paciente" : request.id_paciente,
+                "modelo": request.model,
+                "resumen_completo": resumen_completo,
+                "resumen_estructurado": resumen_estructurado,
+            }).execute()
+
+            registro = db_response.data[0]
+            return {
+                    "id_resumenia": registro["id_resumenia"],
+                    "id_paciente": registro["id_paciente"],
+                    "modelo": registro["modelo"],
+                    "resumen_completo": registro["resumen_completo"],
+                    "resumen_estructurado": registro["resumen_estructurado"],
+                    "fecha_generacion": registro["fecha_generacion"]
+                    }
+        # Manejo manual de errores al comunicarse con IA  
+        except httpx.TimeoutException:
+            logger.error("Timeout en OpenRouter")
+            raise ValueError("AI_TIMEOUT")
+
         except httpx.HTTPStatusError as e:
-            error_msg = f"OpenRouter API error: {e.response.status_code} - {e.response.text}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
+            status_code = e.response.status_code
+            print("aca badgateway")
+            logger.error(f"Error {status_code} de OpenRouter: {e.response.text}")
+            
+            if status_code == 401:
+                raise ValueError("AI_AUTH_ERROR")
+            elif status_code == 422:
+                raise ValueError("AI_VALIDATION_ERROR") 
+            else:
+                raise ValueError("AI_PROVIDER_ERROR")
+
         except Exception as e:
-            error_msg = f"Error calling OpenRouter API: {str(e)}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-    
+            logger.error(f"Error inesperado: {str(e)}")
+            raise ValueError("AI_UNKNOWN_ERROR")
+
+
+
     async def list_models(self) -> List[ModelInfo]:
         """List available models from OpenRouter."""
         try:
@@ -120,61 +178,21 @@ class AIService:
         }).execute()
         return response.data[0]
     
-    # Funcion provisoria para simular IA
-    def procesar_mensaje(mensaje: str) -> str:
-        respuesta = f"Procesado por IA {mensaje}"
-        return respuesta
-
-    # Funcion para generar una respuesta simple de IA
-    async def chat(self, request: ResumeniaRequest) -> ChatResponse :
-        """Create a chat completion using OpenRouter API."""
-
-        messages = [
-            {"role": "system", "content": "Sos un asistente médico que resume historias clínicas."},
-            {"role": "user", "content": f"Generá un resumen estructurado, con opinion para estos datos: {request.datos_clinicos}"}
-        ]
-        payload = {
-            "model": request.model,
-            "messages": messages,
-            "max_tokens": request.max_tokens,
-            "temperature": request.temperature,
-            "stream": request.stream,
-        }
-
+    # Funcion obtener todos los requests de un paciente
+    async def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
         try:
-            logger.info(f"Sending chat completion request for model: {request.model}")
-            response = await self.client.post("/chat/completions", json=payload)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            # Verificamos que existan las claves que esperamos (la "salida")
-            if "choices" not in data or not data["choices"]:
-                raise ValueError("AI_RESPONSE_INVALID")
-            #generated_text = data["choices"][0]["message"]["content"]
-
-            return data
-        # Manejo manual de errores al comunicarse con IA  
-        except httpx.TimeoutException:
-            logger.error("Timeout en OpenRouter")
-            raise ValueError("AI_TIMEOUT")
-
-        except httpx.HTTPStatusError as e:
-            status_code = e.response.status_code
-            print("aca badgateway")
-            logger.error(f"Error {status_code} de OpenRouter: {e.response.text}")
-            
-            if status_code == 401:
-                raise ValueError("AI_AUTH_ERROR")
-            elif status_code == 422:
-                raise ValueError("AI_VALIDATION_ERROR") 
-            else:
-                raise ValueError("AI_PROVIDER_ERROR")
-
+            response =(
+                supabase
+                .table("ia_request")
+                .select("*")
+                .eq("id_paciente", id_paciente)
+                .order("fecha_request",  desc = True)
+                .execute()
+            )
+            return response.data
         except Exception as e:
-            logger.error(f"Error inesperado: {str(e)}")
-            raise ValueError("AI_UNKNOWN_ERROR")
-
+            logger.error(f"Error obteniendo requests IA: {str(e)}")
+            raise ValueError("DB_ERROR")
 
 
     async def close(self):

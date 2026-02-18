@@ -71,6 +71,13 @@ class RootResponse(BaseModel):
     health: str = Field(..., description="Health check URL")
 
 
-# Schema provisorio para validar respuesta simple IA
-class ChatResponse(BaseModel):
-    data: Dict[str, Any] = Field(... , description="Respuesta IA")
+# Schema y subSchema para validar la obtencion de los requests del pacientes
+class ModeloRequest(BaseModel):
+    id_request_ia : str = Field(..., description="ID del request")
+    id_paciente : int = Field(..., description="ID del paciente")
+    datos_clinicos : Dict[str, Any] = Field(..., description="Historia clinica del paciente")
+    fecha_request: datetime = Field(..., description="Fecha del request" )
+
+
+class RequestsPaciente(BaseModel):
+    data: List[ModeloRequest] 

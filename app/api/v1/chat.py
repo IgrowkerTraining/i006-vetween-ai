@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException, Depends,status
 from typing import List
 
-from app.models.schemas import ChatResponse, ResumeniaRequest, ResumeniaResponse, ModelInfo
+from app.models.schemas import ModeloRequest, ResumeniaRequest, ResumeniaResponse, ModelInfo
 from app.services.ai_service import AIService
 from app.api.dependencies import get_ai_service
 from app.core.logging import get_logger
@@ -68,15 +68,18 @@ async def guardar_datosDB(request: ResumeniaRequest):
         logger.error(f"Error al cargar datos: {str(e)}")
         raise HTTPException( detail=str(e))
 
-# Endpoint provisorio para Response IA
-@router.post("/chat", response_model=ChatResponse)
+# Endpoint Response IA
+@router.post("/resumenia", response_model=ResumeniaResponse)
 async def chat(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai_service)):
     try:
         logger.info(f"Resumen request for model: {request.model}")
+        guardar_request = await AIService.save_request(
+            request.id_paciente,
+            request.datos_clinicos
+        )
+        
         data = await ai_service.chat(request)
-        return{
-            "data": data
-        }
+        return data
     # Manejo de errores al comunicarse con IA
     except ValueError as e:
         error_msg = str(e)
@@ -92,7 +95,7 @@ async def chat(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai
                 detail="Error de configuración interna (Auth)."
             )
         elif error_msg == "AI_VALIDATION_ERROR":
-            raise HTTPException(status_code=422, detail="La IA rechazo los datos por formato invalido.")
+            raise HTTPException(status_code=500, detail="La IA rechazo los datos por formato invalido.")
         
         elif error_msg == "AI_PROVIDER_ERROR":
             raise HTTPException(
@@ -110,3 +113,17 @@ async def chat(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                 detail="Ocurrió un error inesperado al procesar la IA."
             )
+
+# Endpoint Obtener los requests de un paciente
+@router.get("/request/{id_paciente}", response_model=list[ModeloRequest])
+async def requests_paciente(
+    id_paciente : int , 
+    ai_service : AIService = Depends(get_ai_service)):
+    try:
+        data = await ai_service.total_request_paciente(id_paciente)
+        return data
+    except ValueError:
+        raise HTTPException(
+            status_code=500,
+            detail="Error obteniendo los requests del paciente"
+        )
