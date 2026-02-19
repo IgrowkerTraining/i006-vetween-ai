@@ -222,6 +222,21 @@ class AIService:
             logger.error(f"Error obteniendo requests IA: {str(e)}")
             raise ValueError("DB_ERROR")
 
+    # Función para obtener todos los resumenes de la base de datos IA
+    def total_resumenes_ia(self):
+        try:
+            response = (
+                supabase
+                .table("resumen_ia")
+                .select("*")
+                .order("fecha_generacion", desc= True)
+                .execute()
+            )
+            return response.data
+        except Exception as e:
+            logger.error(f"Error obteniendo resumenes IA: {str(e)}")
+            raise ValueError("DB_ERROR")
+
     # Función para obtener todos los resumenes IA de un paciente
     def total_resumenes_ia_paciente(self, id_paciente: int) -> ResumenesPaciente:
         try:

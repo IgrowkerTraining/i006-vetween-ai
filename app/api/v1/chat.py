@@ -116,7 +116,7 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
 
 # Endpoint Obtener los requests de un paciente
 @router.get("/request/{id_paciente}", response_model=list[ModeloRequest])
-async def requests_paciente(
+def requests_paciente(
     id_paciente : int , 
     ai_service : AIService = Depends(get_ai_service)):
     try:
@@ -135,8 +135,20 @@ async def requests_paciente(
             detail="Error obteniendo los requests del paciente"
         )
 
+# Endpoint obtener todos los resumenes de la base de datos IA
+@router.get("/resumenia", response_model=List[ModeloResumen])
+def listar_todos_los_resumenes(ai_service: AIService = Depends(get_ai_service)):
+    try:
+        return ai_service.total_resumenes_ia()
+    except ValueError:
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno al obtener el listado de resumenes"
+        )
+
+# Endpoint Obtener los resumenes del paciente
 @router.get("/resumenia/{id_paciente}", response_model=list[ModeloResumen])
-async def resumenes_paciente(
+def resumenes_paciente(
     id_paciente : int , 
     ai_service : AIService = Depends(get_ai_service)):
     try:
