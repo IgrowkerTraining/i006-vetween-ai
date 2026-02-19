@@ -31,7 +31,49 @@ class AIService:
         )
         logger.info(f"AI Service initialized with API key: {mask_api_key(settings.openrouter_api_key)}")  
     
-        # Funcion para generar una respuesta simple de IA
+    async def list_models(self) -> List[ModelInfo]:
+        """List available models from OpenRouter."""
+        try:
+            logger.info("Fetching available models from OpenRouter")
+            response = await self.client.get("/models")
+            response.raise_for_status()
+            
+            data = response.json()
+            models_data = data.get("data", [])
+            
+            models = [
+                ModelInfo(
+                    id=model.get("id", ""),
+                    name=model.get("name"),
+                    description=model.get("description"),
+                    pricing=model.get("pricing")
+                )
+                for model in models_data
+            ]
+            
+            logger.info(f"Retrieved {len(models)} models")
+            return models
+            
+        except httpx.HTTPStatusError as e:
+            error_msg = f"OpenRouter API error: {e.response.status_code} - {e.response.text}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+        except Exception as e:
+            error_msg = f"Error fetching models: {str(e)}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+    
+    async def health_check(self) -> bool:
+        """Check if the AI service is healthy."""
+        try:
+            # Try to fetch models as a simple health check
+            await self.list_models()
+            return True
+        except Exception as e:
+            logger.error(f"AI service health check failed: {str(e)}")
+            return False
+    
+    # Funcion para generar resumenes IA
     async def generar_resumenia(self, request: ResumeniaRequest ,id_request_ia: int) -> ResumeniaResponse :
         """Create a chat completion using OpenRouter API."""
 
@@ -152,50 +194,7 @@ class AIService:
         except Exception as e:
             logger.error(f"Error inesperado: {str(e)}")
             raise ValueError("AI_UNKNOWN_ERROR")
-
-
-
-    async def list_models(self) -> List[ModelInfo]:
-        """List available models from OpenRouter."""
-        try:
-            logger.info("Fetching available models from OpenRouter")
-            response = await self.client.get("/models")
-            response.raise_for_status()
-            
-            data = response.json()
-            models_data = data.get("data", [])
-            
-            models = [
-                ModelInfo(
-                    id=model.get("id", ""),
-                    name=model.get("name"),
-                    description=model.get("description"),
-                    pricing=model.get("pricing")
-                )
-                for model in models_data
-            ]
-            
-            logger.info(f"Retrieved {len(models)} models")
-            return models
-            
-        except httpx.HTTPStatusError as e:
-            error_msg = f"OpenRouter API error: {e.response.status_code} - {e.response.text}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-        except Exception as e:
-            error_msg = f"Error fetching models: {str(e)}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
     
-    async def health_check(self) -> bool:
-        """Check if the AI service is healthy."""
-        try:
-            # Try to fetch models as a simple health check
-            await self.list_models()
-            return True
-        except Exception as e:
-            logger.error(f"AI service health check failed: {str(e)}")
-            return False
     # Funcion para procesar datos de entrada y persistirse en DB
     async def save_request(id_paciente: int, datos_clinicos: dict):
         response = supabase.table("ia_request").insert({
@@ -254,6 +253,21 @@ class AIService:
         except Exception as e:
             logger.error(f"Error obteniendo resumenes IA: {str(e)}")
             raise ValueError("DB_ERROR")
+
+    # Función obtener todos los requests de la base de datos IA
+    def total_requests(self):
+        try:
+            response = (
+                supabase
+                .table("ia_request")
+                .select("*")
+                .order("fecha_request", desc=True)
+                .execute()
+            )
+            return response.data
+        except Exception as e:
+            logger.error(f"Error obteniendo resumenes IA: {str(e)}")
+            raise ValueError("DB_ERROR") 
         
     async def close(self):
         """Close the HTTP client."""

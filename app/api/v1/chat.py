@@ -13,29 +13,7 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-@router.post("/completions", response_model=ResumeniaResponse)
-async def create_chat_completion(
-    request: ResumeniaRequest,
-    ai_service: AIService = Depends(get_ai_service)
-):
-    """
-    Create a chat completion using OpenRouter API.
-    
-    - **model**: AI model to use (e.g., "openai/gpt-3.5-turbo")
-    - **messages**: List of chat messages
-    - **max_tokens**: Maximum tokens to generate (1-4096)
-    - **temperature**: Sampling temperature (0.0-2.0)
-    - **stream**: Enable streaming response (not yet implemented)
-    """
-    try:
-        logger.info(f"Chat completion request for model: {request.model}")
-        response = await ai_service.chat_completion(request)
-        return response
-    except Exception as e:
-        logger.error(f"Error in chat completion: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
+        # ENDPOINT DE DIAGNOSTICO
 @router.get("/models", response_model=List[ModelInfo])
 async def list_models(ai_service: AIService = Depends(get_ai_service)):
     """
@@ -49,25 +27,8 @@ async def list_models(ai_service: AIService = Depends(get_ai_service)):
     except Exception as e:
         logger.error(f"Error fetching models: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-# Creación de endpoint provisoria para probar persistencia en DB
-@router.post("/request", response_model=dict)
-async def guardar_datosDB(request: ResumeniaRequest):
-    try:
-        guardar_request = await AIService.save_request(
-            request.id_paciente,
-            request.datos_clinicos
-        )
-
-        return {
-            "mensaje": "guardado correcto en base de datos",
-        
-            "status": "Creado"
-            }
-    except Exception as e:
-        logger.error(f"Error al cargar datos: {str(e)}")
-        raise HTTPException( detail=str(e))
-
+    
+    #   ENDPOINTS DE NEGOCIO 
 # Endpoint Response IA
 @router.post("/resumenia", response_model=ResumeniaResponse)
 async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai_service)):
@@ -114,27 +75,6 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
                 detail="Ocurrió un error inesperado al procesar la IA."
             )
 
-# Endpoint Obtener los requests de un paciente
-@router.get("/request/{id_paciente}", response_model=list[ModeloRequest])
-def requests_paciente(
-    id_paciente : int , 
-    ai_service : AIService = Depends(get_ai_service)):
-    try:
-        data = ai_service.total_request_paciente(id_paciente)
-        
-        # Validar si la lista viene vacia
-        if not data:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No se encontraron request para el paciente con ID: {id_paciente}"
-            )
-        return data
-    except ValueError:
-        raise HTTPException(
-            status_code=500,
-            detail="Error obteniendo los requests del paciente"
-        )
-
 # Endpoint obtener todos los resumenes de la base de datos IA
 @router.get("/resumenia", response_model=List[ModeloResumen])
 def listar_todos_los_resumenes(ai_service: AIService = Depends(get_ai_service)):
@@ -166,3 +106,33 @@ def resumenes_paciente(
             status_code=500,
             detail="Error obteniendo los requests del paciente"
         )
+
+# Endpoint provisoria para probar persistencia en DB
+@router.get("/request", response_model=List[ModeloRequest])
+def listar_requests(ai_service : AIService = Depends(get_ai_service)):
+    try:
+        return ai_service.total_requests()
+    except Exception as e:
+        logger.error(f"Error al cargar datos: {str(e)}")
+        raise HTTPException( detail=str(e))
+# Endpoint Obtener los requests de un paciente
+@router.get("/request/{id_paciente}", response_model=list[ModeloRequest])
+def requests_paciente(
+    id_paciente : int , 
+    ai_service : AIService = Depends(get_ai_service)):
+    try:
+        data = ai_service.total_request_paciente(id_paciente)
+        
+        # Validar si la lista viene vacia
+        if not data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No se encontraron request para el paciente con ID: {id_paciente}"
+            )
+        return data
+    except ValueError:
+        raise HTTPException(
+            status_code=500,
+            detail="Error obteniendo los requests del paciente"
+        )
+
