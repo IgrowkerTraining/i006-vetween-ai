@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from app.core.database import supabase
 from app.config.settings import settings
-from app.models.schemas import RequestsPaciente , ResumeniaRequest, ResumeniaResponse, ModelInfo
+from app.models.schemas import ResumenesPaciente, RequestsPaciente , ResumeniaRequest, ResumeniaResponse, ModelInfo
 from app.core.logging import get_logger
 from app.core.security import mask_api_key
 
@@ -205,7 +205,7 @@ class AIService:
         return response.data[0]
     
     # Funcion obtener todos los requests de un paciente
-    async def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
+    def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
         try:
             if not id_paciente:
                 return None
@@ -222,7 +222,24 @@ class AIService:
             logger.error(f"Error obteniendo requests IA: {str(e)}")
             raise ValueError("DB_ERROR")
 
-
+    # Función para obtener todos los resumenes IA de un paciente
+    def total_resumenes_ia_paciente(self, id_paciente: int) -> ResumenesPaciente:
+        try:
+            if not id_paciente:
+                return None
+            response = (
+                supabase
+                .table("resumen_ia")
+                .select("*")
+                .eq("id_paciente", id_paciente)
+                .order("fecha_generacion", desc= True)
+                .execute()
+            )
+            return response.data
+        except Exception as e:
+            logger.error(f"Error obteniendo resumenes IA: {str(e)}")
+            raise ValueError("DB_ERROR")
+        
     async def close(self):
         """Close the HTTP client."""
         await self.client.aclose()

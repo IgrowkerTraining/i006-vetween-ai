@@ -81,3 +81,14 @@ class ModeloRequest(BaseModel):
 
 class RequestsPaciente(BaseModel):
     data: List[ModeloRequest] 
+
+# Schemas para validar la obtención de resumenes IA por paciente
+class ModeloResumen(BaseModel):
+    id_resumenia: str = Field(..., description="ID resumen IA")
+    id_paciente : int = Field(..., description="ID del paciente")
+    resumen_completo: str = Field(..., description="Texto completo del resumen")
+    resumen_estructurado: Dict[str, Any] = Field(..., description="Resumen IA estructurado")
+    fecha_generacion: datetime = Field(...,description= "Fecha de generacion del resumen IA") 
+
+class ResumenesPaciente(BaseModel):
+    data: List[ModeloResumen]

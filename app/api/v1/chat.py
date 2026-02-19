@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException, Depends,status
 from typing import List
 
-from app.models.schemas import ModeloRequest, ResumeniaRequest, ResumeniaResponse, ModelInfo
+from app.models.schemas import ModeloResumen ,ModeloRequest, ResumeniaRequest, ResumeniaResponse, ModelInfo
 from app.services.ai_service import AIService
 from app.api.dependencies import get_ai_service
 from app.core.logging import get_logger
@@ -120,13 +120,33 @@ async def requests_paciente(
     id_paciente : int , 
     ai_service : AIService = Depends(get_ai_service)):
     try:
-        data = await ai_service.total_request_paciente(id_paciente)
+        data = ai_service.total_request_paciente(id_paciente)
         
         # Validar si la lista viene vacia
         if not data:
             raise HTTPException(
                 status_code=404,
                 detail=f"No se encontraron request para el paciente con ID: {id_paciente}"
+            )
+        return data
+    except ValueError:
+        raise HTTPException(
+            status_code=500,
+            detail="Error obteniendo los requests del paciente"
+        )
+
+@router.get("/resumenia/{id_paciente}", response_model=list[ModeloResumen])
+async def resumenes_paciente(
+    id_paciente : int , 
+    ai_service : AIService = Depends(get_ai_service)):
+    try:
+        data = ai_service.total_resumenes_ia_paciente(id_paciente)
+        
+        # Validar si la lista viene vacia
+        if not data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No se encontraron resumenes para el paciente con ID: {id_paciente}"
             )
         return data
     except ValueError:
