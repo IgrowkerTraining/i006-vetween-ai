@@ -55,6 +55,21 @@ class AIService:
             "resumen_estructurado": {
                 "estado_general": "",
                 "tipo_paciente": "",
+                "sintesis_visitas": [
+                    {
+                        "fecha": "",
+                        "motivo": "",
+                        "diagnostico": "",
+                        "tratamiento": ""
+                    }
+                ],
+                "historial_vacunas": [
+                    {
+                        "nombre": "",
+                        "fecha_aplicacion": "",
+                        "estado": ""
+                    }
+                ],
                 "descripcion_clinica": "",
                 "tratamiento_indicado": "",
                 "factores_riesgo": [],
