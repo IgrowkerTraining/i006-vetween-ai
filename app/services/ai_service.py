@@ -196,7 +196,7 @@ class AIService:
         except Exception as e:
             logger.error(f"AI service health check failed: {str(e)}")
             return False
-    # Funcion provisoria para procesar datos de entrada y persistirse en DB
+    # Funcion para procesar datos de entrada y persistirse en DB
     async def save_request(id_paciente: int, datos_clinicos: dict):
         response = supabase.table("ia_request").insert({
             "id_paciente": id_paciente,
@@ -207,6 +207,8 @@ class AIService:
     # Funcion obtener todos los requests de un paciente
     async def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
         try:
+            if not id_paciente:
+                return None
             response =(
                 supabase
                 .table("ia_request")

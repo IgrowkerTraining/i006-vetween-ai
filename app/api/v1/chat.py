@@ -70,7 +70,7 @@ async def guardar_datosDB(request: ResumeniaRequest):
 
 # Endpoint Response IA
 @router.post("/resumenia", response_model=ResumeniaResponse)
-async def chat(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai_service)):
+async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai_service)):
     try:
         logger.info(f"Resumen request for model: {request.model}")
         guardar_request = await AIService.save_request(
@@ -121,6 +121,13 @@ async def requests_paciente(
     ai_service : AIService = Depends(get_ai_service)):
     try:
         data = await ai_service.total_request_paciente(id_paciente)
+        
+        # Validar si la lista viene vacia
+        if not data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No se encontraron request para el paciente con ID: {id_paciente}"
+            )
         return data
     except ValueError:
         raise HTTPException(
