@@ -32,7 +32,7 @@ class AIService:
         logger.info(f"AI Service initialized with API key: {mask_api_key(settings.openrouter_api_key)}")  
     
         # Funcion para generar una respuesta simple de IA
-    async def generar_resumenia(self, request: ResumeniaRequest) -> ResumeniaResponse :
+    async def generar_resumenia(self, request: ResumeniaRequest ,id_request_ia: int) -> ResumeniaResponse :
         """Create a chat completion using OpenRouter API."""
 
         system_prompt = """
@@ -86,12 +86,19 @@ class AIService:
                 raise ValueError("AI_RESPONSE_INVALID")
             content = data["choices"][0]["message"]["content"]
 
-            ia_output = json.loads(content)
+            # 1. Limpieza básica: quitamos posibles bloques de código de markdown
+            content_clean = content.replace("```json", "").replace("```", "").strip()
+    
+            # 2. Intentamos cargar el JSON
+            print(f"--- CONTENIDO RECIBIDO ---\n{content}\n--- FIN ---")
+            ia_output = json.loads(content_clean)
+            #ia_output = json.loads(content)
             resumen_completo = ia_output["resumen_completo"]
             resumen_estructurado = ia_output["resumen_estructurado"]
 
-            db_response = await supabase.table("resumen_ia").insert({
+            db_response = supabase.table("resumen_ia").insert({
                 "id_paciente" : request.id_paciente,
+                "id_request_ia": id_request_ia,
                 "modelo": request.model,
                 "resumen_completo": resumen_completo,
                 "resumen_estructurado": resumen_estructurado,
