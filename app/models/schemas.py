@@ -13,7 +13,7 @@ class ChatMessage(BaseModel):
 
 class ResumeniaRequest(BaseModel):
     """Chat completion request model."""
-    model: str = Field(default="openai/gpt-3.5-turbo", description="AI model to use")
+    model: str = Field(default="google/gemini-2.0-flash-001", description="AI model to use")
     #messages: List[ChatMessage] = Field(..., description="List of chat messages")
     
     # Agrego las validaciones de las entradas para los campos de la DB
