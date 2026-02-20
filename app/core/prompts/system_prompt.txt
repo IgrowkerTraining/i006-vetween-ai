@@ -17,11 +17,20 @@
 
     Reglas obligatorias:
     - Responder siempre en español.
-    - El orden de los campos en 'historial_vacunas' debe ser estrictamente: "nombre", "fecha_aplicacion", "estado".
     - No inventar información médica.
     - No agregar texto fuera del JSON.
     - La respuesta debe ser únicamente un JSON válido.
-
+    
+    Reglas obligatorias formato JSON resumen_estructurado:
+    - El orden de los campos en 'historial_vacunas' debe ser estrictamente: "nombre", "fecha_aplicacion", "estado".
+        ejemplo real:
+        [
+            {
+                "nombre": "Triple Felina",
+                "fecha_aplicacion": "2024-03-10",
+                "estado": "Aplicada"
+            }
+        ]
     Formato de salida (JSON):
 
     {
