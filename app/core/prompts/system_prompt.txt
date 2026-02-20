@@ -17,6 +17,7 @@
 
     Reglas obligatorias:
     - Responder siempre en español.
+    - El orden de los campos en 'historial_vacunas' debe ser estrictamente: "nombre", "fecha_aplicacion", "estado".
     - No inventar información médica.
     - No agregar texto fuera del JSON.
     - La respuesta debe ser únicamente un JSON válido.
@@ -36,7 +37,7 @@
                     "tratamiento": ""
                 }
             ],
-            "historial_vacunas": [
+           "historial_vacunas": [
                 {
                     "nombre": "",
                     "fecha_aplicacion": "",

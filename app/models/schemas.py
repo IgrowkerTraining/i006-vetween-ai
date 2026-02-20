@@ -21,7 +21,7 @@ class ResumeniaRequest(BaseModel):
     datos_clinicos: Dict[str, Any] = Field(... , description="Historial clinico")
 
     max_tokens: Optional[int] = Field(default=1000, ge=1, le=4096, description="Maximum tokens to generate")
-    temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0, description="Sampling temperature")
+    temperature: Optional[float] = Field(default=0.2, ge=0.0, le=2.0, description="Sampling temperature")
     stream: Optional[bool] = Field(default=False, description="Enable streaming response")
 
 
