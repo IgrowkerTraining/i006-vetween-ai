@@ -24,6 +24,26 @@ class ResumeniaRequest(BaseModel):
     temperature: Optional[float] = Field(default=0.2, ge=0.0, le=2.0, description="Sampling temperature")
     stream: Optional[bool] = Field(default=False, description="Enable streaming response")
 
+class Vacuna(BaseModel):
+    nombre: str
+    fecha_aplicacion: str
+    estado: str
+
+class Visita(BaseModel):
+    fecha: str
+    motivo: str
+    diagnostico: str
+    tratamiento: str
+
+class ResumenEstructurado(BaseModel):
+    estado_general: str
+    tipo_paciente: str
+    sintesis_visitas: List[Visita]
+    historial_vacunas: List[Vacuna]
+    descripcion_clinica: str
+    tratamiento_indicado: str
+    factores_riesgo: List[str]
+    puntos_clave_proximas_consultas: List[str]
 
 class ResumeniaResponse(BaseModel):
     """Chat completion response model."""
@@ -31,7 +51,7 @@ class ResumeniaResponse(BaseModel):
     id_resumenia: str = Field(..., description="Resumen ID")
     id_paciente: int = Field(..., description="ID del paciente")
     resumen_completo : str = Field(..., description="Resumen en texto plano")
-    resumen_estructurado: Dict[str,Any] = Field(..., description="Resumen JSON estructudado")
+    resumen_estructurado: ResumenEstructurado = Field(..., description="Resumen JSON estructudado")
     modelo: str = Field(..., description="Model used")
     fecha_generacion: datetime = Field(default_factory=datetime.now, description="Fecha de creacion del resumen")
     #object: str = Field(default="chat.completion", description="Object type")

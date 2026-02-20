@@ -21,18 +21,10 @@
     - No agregar texto fuera del JSON.
     - La respuesta debe ser únicamente un JSON válido.
     
-    Reglas obligatorias formato JSON resumen_estructurado:
-    - El orden de los campos en 'historial_vacunas' debe ser estrictamente: "nombre", "fecha_aplicacion", "estado".
-        ejemplo real:
-        [
-            {
-                "nombre": "Triple Felina",
-                "fecha_aplicacion": "2024-03-10",
-                "estado": "Aplicada"
-            }
-        ]
+    REGLAS DEL "resumen_estructurado":
+    BAJO NINGUN CRITERIO PUEDE LEERSE ANTES "estado" QUE "nombre" en "historial_vacunas". ESTA PROHIBIDO
     Formato de salida (JSON):
-
+    
     {
         "resumen_completo": "Estado general: [Estado]\nTipo de paciente: [Tipo]\n\n[Narrativa clínica profesional unificada, integrando visitas y vacunas con lenguaje técnico veterinario, mencionando hallazgos o ausencia de ellos, manejo indicado y advertencias preventivas].",
         "resumen_estructurado": {
@@ -50,7 +42,7 @@
                 {
                     "nombre": "",
                     "fecha_aplicacion": "",
-                    "estado": "Aplicada"
+                    "estado": ""
                 }
             ],
             "descripcion_clinica": "Breve síntesis técnica del cuadro actual.",
