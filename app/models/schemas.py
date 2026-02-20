@@ -10,6 +10,26 @@ class ChatMessage(BaseModel):
     role: str = Field(..., description="Message role: 'user', 'assistant', or 'system'")
     content: str = Field(..., description="Message content")
 
+class Paciente(BaseModel):
+    nombre: str
+    especie: str
+    edad: int
+    sexo: str
+
+class Visitas(BaseModel):
+    fecha: str
+    motivo_consulta: str
+    diagnostico: str
+    tratamiento: str
+
+class Vacunas(BaseModel):
+    tipo: str
+    fecha_aplicacion: str
+
+class DatosClinicos(BaseModel):
+    paciente: Paciente
+    visitas: List[Visitas]
+    vacunas: List[Vacunas]
 
 class ResumeniaRequest(BaseModel):
     """Chat completion request model."""
@@ -18,18 +38,18 @@ class ResumeniaRequest(BaseModel):
     
     # Agrego las validaciones de las entradas para los campos de la DB
     id_paciente: int = Field(... , description="ID del paciente")
-    datos_clinicos: Dict[str, Any] = Field(... , description="Historial clinico")
+    datos_clinicos: DatosClinicos = Field(... , description="Historial clinico")
 
     max_tokens: Optional[int] = Field(default=1000, ge=1, le=4096, description="Maximum tokens to generate")
     temperature: Optional[float] = Field(default=0.2, ge=0.0, le=2.0, description="Sampling temperature")
     stream: Optional[bool] = Field(default=False, description="Enable streaming response")
 
-class Vacuna(BaseModel):
+class VacunaResponse(BaseModel):
     nombre: str
     fecha_aplicacion: str
     estado: str
 
-class Visita(BaseModel):
+class VisitaResponse(BaseModel):
     fecha: str
     motivo: str
     diagnostico: str
@@ -38,8 +58,8 @@ class Visita(BaseModel):
 class ResumenEstructurado(BaseModel):
     estado_general: str
     tipo_paciente: str
-    sintesis_visitas: List[Visita]
-    historial_vacunas: List[Vacuna]
+    sintesis_visitas: List[VisitaResponse]
+    historial_vacunas: List[VacunaResponse]
     descripcion_clinica: str
     tratamiento_indicado: str
     factores_riesgo: List[str]
@@ -92,10 +112,11 @@ class RootResponse(BaseModel):
 
 
 # Schema y subSchema para validar la obtencion de los requests del pacientes
+
 class ModeloRequest(BaseModel):
     id_request_ia : str = Field(..., description="ID del request")
     id_paciente : int = Field(..., description="ID del paciente")
-    datos_clinicos : Dict[str, Any] = Field(..., description="Historia clinica del paciente")
+    datos_clinicos : DatosClinicos = Field(..., description="Historia clinica del paciente")
     fecha_request: datetime = Field(..., description="Fecha del request" )
 
 

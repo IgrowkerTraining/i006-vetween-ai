@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from app.core.database import supabase
 from app.config.settings import settings
-from app.models.schemas import ResumenesPaciente, RequestsPaciente , ResumeniaRequest, ResumeniaResponse, ModelInfo
+from app.models.schemas import DatosClinicos,ResumenesPaciente, RequestsPaciente , ResumeniaRequest, ResumeniaResponse, ModelInfo
 from app.core.logging import get_logger
 from app.core.security import mask_api_key
 
@@ -172,10 +172,10 @@ class AIService:
             raise ValueError("AI_UNKNOWN_ERROR")
     
     # Funcion para procesar datos de entrada y persistirse en DB
-    async def save_request(id_paciente: int, datos_clinicos: dict):
+    async def save_request(id_paciente: int, datos_clinicos: DatosClinicos):
         response = supabase.table("ia_request").insert({
             "id_paciente": id_paciente,
-            "datos_clinicos": datos_clinicos
+            "datos_clinicos": datos_clinicos.model_dump()
         }).execute()
         return response.data[0]
     
