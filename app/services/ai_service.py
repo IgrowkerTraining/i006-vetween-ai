@@ -132,12 +132,13 @@ class AIService:
             content_clean = content.replace("```json", "").replace("```", "").strip()
     
             # 6. Carga del JSON generado por la IA
-            print(f"--- CONTENIDO RECIBIDO ---\n{content}\n--- FIN ---")
+            print(f"--- CONTENIDO RECIBIDO ---\n{content_clean}\n--- FIN ---")
             ia_output = json.loads(content_clean)
             
             # 7. Verificación si la IA detectó que el input no es veterinario
             if isinstance(ia_output, dict) and ia_output.get("error") == "INPUT_INVALIDO":
-                    logger.warning(f"Inteton de resumen invalido para paciente {request.id_paciente}")
+                    logger.warning(f"Inteto de resumen invalido para paciente {request.id_paciente}")
+                    self.eliminar_registro(id_request_ia)
                     raise ValueError("AI_INPUT_INVALID")
             
             # 8. Extracción de campos obligatorios según el Schema
@@ -263,7 +264,16 @@ class AIService:
         except Exception as e:
             logger.error(f"Error obteniendo resumenes IA: {str(e)}")
             raise ValueError("DB_ERROR") 
-        
+
+    # Función para eliminar registro de la base de datos
+    def eliminar_registro(self, id_registro : int):
+        try:
+            logger.info(f"Eliminando registro de auditoria invalido: {id_registro}")
+            response = supabase.table("ia_request").delete().eq("id_request_ia",id_registro).execute()
+            return response
+        except Exception as e:
+            logger.error(f"Error al intentar eliminar el registro {id_registro}: {str(e)}")
+
     async def close(self):
         """Close the HTTP client."""
         await self.client.aclose()

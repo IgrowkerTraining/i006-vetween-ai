@@ -40,7 +40,6 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
         )
         id_request = guardar_request["id_request_ia"]
         data = await ai_service.generar_resumenia(request,id_request)
-        
 
         return data
     # Manejo de errores al comunicarse con IA
