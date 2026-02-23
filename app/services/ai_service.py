@@ -189,10 +189,11 @@ class AIService:
         
         except Exception as e:
             logger.error(f"Error inesperado: {str(e)}")
+            self.eliminar_registro(id_request_ia)
             raise ValueError("AI_UNKNOWN_ERROR")
     
     # Funcion para procesar datos de entrada y persistirse en DB
-    async def save_request(id_paciente: int, datos_clinicos: DatosClinicos):
+    async def save_request(self,id_paciente: int, datos_clinicos: DatosClinicos):
         response = supabase.table("ia_request").insert({
             "id_paciente": id_paciente,
             "datos_clinicos": datos_clinicos.model_dump()
