@@ -34,7 +34,7 @@ async def list_models(ai_service: AIService = Depends(get_ai_service)):
 async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(get_ai_service)):
     try:
         logger.info(f"Resumen request for model: {request.model}")
-        guardar_request = await AIService.save_request(
+        guardar_request = await ai_service.save_request(
             request.id_paciente,
             request.datos_clinicos
         )

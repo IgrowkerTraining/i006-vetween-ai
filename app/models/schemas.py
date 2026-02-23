@@ -15,16 +15,27 @@ class Paciente(BaseModel):
     especie: str
     edad: int
     sexo: str
+    raza: str
+    color: str
+    senia: str
+    peso: int | float
+    esterilizado: bool
+    tiene_microchip: bool
+    num_microchip: Optional[str] = None
 
 class Visitas(BaseModel):
     fecha: str
     motivo_consulta: str
     diagnostico: str
     tratamiento: str
+    observaciones: str
+    historial_previo: str
 
 class Vacunas(BaseModel):
     tipo: str
+    nombre_cientifico: str
     fecha_aplicacion: str
+    observacion: str
 
 class DatosClinicos(BaseModel):
     paciente: Paciente
