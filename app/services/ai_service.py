@@ -96,13 +96,17 @@ class AIService:
     
     # Funcion para generar resumenes IA
     async def generar_resumenia(self, request: ResumeniaRequest ,id_request_ia: int) -> ResumeniaResponse :
-        """Create a chat completion using OpenRouter API."""
+        """Cordina la generacio ndel resumen médico con Ia y su persistencia
+        en la base de datos."""
 
+        # 1. Configuracion de prompts y mensajes para la API
         system_prompt = cargar_prompt()
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Generá un resumen estructuradocon estos datos: {request.datos_clinicos}"}
         ]
+
+        # 2. Preparacion del PAyload siguiendo el contrato de OpenRoute/Gemini
         payload = {
             "model": request.model,
             "messages": messages,
@@ -112,27 +116,35 @@ class AIService:
         }
 
         try:
+            # 3. LLamada asicronica al provedor IA
             logger.info(f"Sending chat completion request for model: {request.model}")
             response = await self.client.post("/chat/completions", json=payload)
             response.raise_for_status()
             
             data = response.json()
             
-            # Verificamos que existan las claves que esperamos (la "salida")
+            # 4. Validación estructurada de respuesta de lproveedor
             if "choices" not in data or not data["choices"]:
                 raise ValueError("AI_RESPONSE_INVALID")
             content = data["choices"][0]["message"]["content"]
 
-            # 1. Limpieza básica: quitamos posibles bloques de código de markdown
+            # 5. Limpieza del contenido: quitamos posibles bloques de código de markdown
             content_clean = content.replace("```json", "").replace("```", "").strip()
     
-            # 2. Intentamos cargar el JSON
+            # 6. Carga del JSON generado por la IA
             print(f"--- CONTENIDO RECIBIDO ---\n{content}\n--- FIN ---")
             ia_output = json.loads(content_clean)
-            #ia_output = json.loads(content)
+            
+            # 7. Verificación si la IA detectó que el input no es veterinario
+            if isinstance(ia_output, dict) and ia_output.get("error") == "INPUT_INVALIDO":
+                    logger.warning(f"Inteton de resumen invalido para paciente {request.id_paciente}")
+                    raise ValueError("AI_INPUT_INVALID")
+            
+            # 8. Extracción de campos obligatorios según el Schema
             resumen_completo = ia_output["resumen_completo"]
             resumen_estructurado = ia_output["resumen_estructurado"]
 
+            # 9. Persistencia en Supabase del resumen generado
             db_response = supabase.table("resumen_ia").insert({
                 "id_paciente" : request.id_paciente,
                 "id_request_ia": id_request_ia,
@@ -141,6 +153,7 @@ class AIService:
                 "resumen_estructurado": resumen_estructurado,
             }).execute()
 
+            # 10. Formateo de respuesta final para el Router
             registro = db_response.data[0]
             return {
                     "id_resumenia": registro["id_resumenia"],
@@ -150,7 +163,9 @@ class AIService:
                     "resumen_estructurado": registro["resumen_estructurado"],
                     "fecha_generacion": registro["fecha_generacion"]
                     }
-        # Manejo manual de errores al comunicarse con IA  
+        
+        
+        # --- SECCION MANEJO DE EXCEPCIONES ---  
         except httpx.TimeoutException:
             logger.error("Timeout en OpenRouter")
             raise ValueError("AI_TIMEOUT")
@@ -167,6 +182,10 @@ class AIService:
             else:
                 raise ValueError("AI_PROVIDER_ERROR")
 
+        except ValueError:
+            # RELANZAMIENTO: Permite que errores de negocio (INPUT_INVALIDO) lleguen al Router
+            raise
+        
         except Exception as e:
             logger.error(f"Error inesperado: {str(e)}")
             raise ValueError("AI_UNKNOWN_ERROR")

@@ -8,7 +8,10 @@
     Tu tarea es generar DOS salidas integradas en un JSON:
     1) Un resumen clínico redactado con tono médico profesional, siguiendo la estructura del PRD.
     2) Un resumen estructurado en formato JSON.
-
+    
+    "REGLA DE ORO: Antes de procesar, verifica si el input describe a un animal y contiene eventos médicos. Si el input es texto basura, objetos inanimados, o datos de prueba (como 'string', 'asdf', etc.), DEBES responder ÚNICAMENTE con el siguiente JSON: {'error': 'INPUT_INVALIDO'}. 
+    No inventes, no saludes, no generes un resumen genérico."
+    
     REGLAS DE REDACCIÓN PARA EL "resumen_completo":
     - Comenzar obligatoriamente con: "Estado general: [Estable/Reservado/etc]" y "Tipo de paciente: [Primera consulta/Recurrente]".
     - Usar terminología clínica: en lugar de "está estresado", usar "cuadro conductual compatible con estrés ambiental"; en lugar de "está sano", usar "sin hallazgos clínicos orgánicos asociados" o "parámetros normales".

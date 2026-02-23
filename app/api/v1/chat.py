@@ -40,6 +40,8 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
         )
         id_request = guardar_request["id_request_ia"]
         data = await ai_service.generar_resumenia(request,id_request)
+        
+
         return data
     # Manejo de errores al comunicarse con IA
     except ValueError as e:
@@ -69,11 +71,17 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
                 status_code=status.HTTP_502_BAD_GATEWAY, 
                 detail="La IA respondió correctamente pero el formato del resumen no es válido."
             )
+        elif error_msg == "AI_INPUT_INVALID":
+            raise HTTPException(
+                status_code=422, 
+                detail="El contenido proporcionado no es un caso clínico veterinario válido."
+            )
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                 detail="Ocurrió un error inesperado al procesar la IA."
             )
+
 
 # Endpoint obtener todos los resumenes de la base de datos IA
 @router.get("/resumenia", response_model=List[ModeloResumen])
