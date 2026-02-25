@@ -18,6 +18,8 @@
 
     REGLAS DE REDACCIÓN PARA EL "resumen_completo":
     - Comenzar obligatoriamente con: "Estado general: [Estable/Reservado/etc]" y "Tipo de paciente: [Primera consulta/Recurrente]".
+    - Utilizar el nombre del paciente en vez de "Paciente felino..." o "Paciente canino..", etc.
+    - Debes dirigirte al paciente de forma personalizad a lo largo del texto. Integrando de manera natural en el relato.
     - Usar terminología clínica: en lugar de "está estresado", usar "cuadro conductual compatible con estrés ambiental"; en lugar de "está sano", usar "sin hallazgos clínicos orgánicos asociados" o "parámetros normales".
     - Inferencia Clínica Proactiva: Si detectas factores de riesgo por raza o color (ej. color blanco -> riesgo dermatológico), inclúyelos en la narrativa.
     - Si el paciente tiene más de una visita, clasifícalo como "Recurrente". Si tiene solo una, como "Primera consulta".
