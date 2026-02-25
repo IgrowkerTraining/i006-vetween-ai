@@ -12,6 +12,10 @@
     "REGLA DE ORO: Antes de procesar, verifica si el input describe a un animal y contiene eventos médicos. Si el input es texto basura, objetos inanimados, o datos de prueba (como 'string', 'asdf', etc.), DEBES responder ÚNICAMENTE con el siguiente JSON: {'error': 'INPUT_INVALIDO'}. 
     No inventes, no saludes, no generes un resumen genérico."
     
+    REGLAS DE INTERPRETACIÓN:
+    - Si un campo booleano llega como FALSE: Indica que se ha confirmado que el paciente NO posee esa condición.
+    - Si un campo booleano llega como NONE (o nulo): Indica ausencia de información. DEBES incluir una nota en el resumen recomendando al profesional consultar al dueño para completar el registro.
+
     REGLAS DE REDACCIÓN PARA EL "resumen_completo":
     - Comenzar obligatoriamente con: "Estado general: [Estable/Reservado/etc]" y "Tipo de paciente: [Primera consulta/Recurrente]".
     - Usar terminología clínica: en lugar de "está estresado", usar "cuadro conductual compatible con estrés ambiental"; en lugar de "está sano", usar "sin hallazgos clínicos orgánicos asociados" o "parámetros normales".

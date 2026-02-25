@@ -19,8 +19,8 @@ class Paciente(BaseModel):
     color: str
     senia: str
     peso: int | float
-    esterilizado: bool
-    tiene_microchip: bool
+    esterilizado: bool | None = None
+    tiene_microchip: bool | None = None
     num_microchip: Optional[str] = None
 
 class Visitas(BaseModel):
@@ -29,7 +29,7 @@ class Visitas(BaseModel):
     diagnostico:Optional[str] = None
     tratamiento: Optional[str] = None
     observaciones: Optional[str] = None
-    historial_previo: Optional[str] = None
+    historial_previo: Optional[bool] = None
 
 class Vacunas(BaseModel):
     tipo: str
