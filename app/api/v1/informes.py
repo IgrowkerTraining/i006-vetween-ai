@@ -10,7 +10,7 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/chat", tags=["chat"])
+router = APIRouter(prefix="/informes", tags=["informes"])
 
 
         # ENDPOINT DE DIAGNOSTICO
