@@ -55,10 +55,17 @@ logger = get_logger(__name__)
 
 
 class AIService:
-    """Service for interacting with OpenRouter API."""
+    """
+    Sercivio para imteractuar con la API de OpenROuter y gestionar 
+    el ciclo de vida de los informes de IA.
+    """
     
     def __init__(self):
-        """Initialize the AI service."""
+        """
+        inicializa el cliente HTTP asíncronico con la configuracion de OpenRouter.
+        Se utiliza httpx para manejar petiiones no bloqueantes de forma eficiente.
+        """
+        # Configruación del cliente con headers obligatorios de OpenRouter
         self.client = httpx.AsyncClient(
             base_url=settings.openrouter_base_url,
             headers={
@@ -67,8 +74,9 @@ class AIService:
                 "HTTP-Referer": "https://github.com/your-username/template-python-fastapi",
                 "X-Title": settings.app_name,
             },
-            timeout=60.0
+            timeout=60.0 # Tiempo de espera extendido para procesamiento de LLMs
         )
+        # Log de confirmación con enmascaramiento de credenciales por seguridad
         logger.info(f"AI Service initialized with API key: {mask_api_key(settings.openrouter_api_key)}")  
     
     async def list_models(self) -> List[ModelInfo]:
@@ -113,19 +121,18 @@ class AIService:
             logger.error(f"AI service health check failed: {str(e)}")
             return False
     
-    # Funcion para generar resumenes IA
     async def generar_resumenia(self, request: ResumeniaRequest ,id_request_ia: int) -> ResumeniaResponse :
-        """Cordina la generacio ndel resumen médico con Ia y su persistencia
+        """Cordina la generación del resumen médico con IA y su persistencia
         en la base de datos."""
 
-        # 1. Configuracion de prompts y mensajes para la API
+        # 1. Prompt Engineering: Cargamos instruccions externas y armamos el historial
         system_prompt = cargar_prompt()
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Generá un resumen estructuradocon estos datos: {request.datos_clinicos}"}
         ]
 
-        # 2. Preparacion del PAyload siguiendo el contrato de OpenRoute/Gemini
+        # 2. Preparacion del Payload siguiendo el contrato de OpenRoute/Gemini
         payload = {
             "model": request.model,
             "messages": messages,
@@ -135,26 +142,26 @@ class AIService:
         }
 
         try:
-            # 3. LLamada asicronica al provedor IA
-            logger.info(f"Sending chat completion request for model: {request.model}")
+            # 3. LLamada a la API externa
+            logger.info(f"Enviando solicitud de completado a modelo: {request.model}")
             response = await self.client.post("/chat/completions", json=payload)
-            response.raise_for_status()
+            response.raise_for_status() # lanza excepción si el status no es 2xx
             
             data = response.json()
             
-            # 4. Validación estructurada de respuesta de lproveedor
+            # 4. Validación de respuesta: Verificamos que la IA haya devuelto texto
             if "choices" not in data or not data["choices"]:
                 raise ValueError("AI_RESPONSE_INVALID")
             content = data["choices"][0]["message"]["content"]
 
-            # 5. Limpieza del contenido: quitamos posibles bloques de código de markdown
+            # 5. Limpieza del contenido: quitamos posibles bloques de código Markdown
             content_clean = content.replace("```json", "").replace("```", "").strip()
-    
+            
             # 6. Carga del JSON generado por la IA
             print(f"--- CONTENIDO RECIBIDO ---\n{content_clean}\n--- FIN ---")
             ia_output = json.loads(content_clean)
             
-            # 7. Verificación si la IA detectó que el input no es veterinario
+            # 7. Lógica de limpieza: Si el input fue inválido, eliminamos el registro de auditoria
             if isinstance(ia_output, dict) and ia_output.get("error") == "INPUT_INVALIDO":
                     logger.warning(f"Inteto de resumen invalido para paciente {request.id_paciente}")
                     self.eliminar_registro(id_request_ia)
@@ -164,7 +171,7 @@ class AIService:
             resumen_completo = ia_output["resumen_completo"]
             resumen_estructurado = ia_output["resumen_estructurado"]
 
-            # 9. Persistencia en Supabase del resumen generado
+            # 9. Persistencia del Output: Guardamos el análisis final en la DB
             db_response = supabase.table("resumen_ia").insert({
                 "id_paciente" : request.id_paciente,
                 "id_request_ia": id_request_ia,
@@ -173,7 +180,7 @@ class AIService:
                 "resumen_estructurado": resumen_estructurado,
             }).execute()
 
-            # 10. Formateo de respuesta final para el Router
+            # 10. Mapeo: Retornamos el primer objeto del inssert para el esquema de respuesta
             registro = db_response.data[0]
             return {
                     "id_resumenia": registro["id_resumenia"],
@@ -184,46 +191,54 @@ class AIService:
                     "fecha_generacion": registro["fecha_generacion"]
                     }
         
+        # -------------------------------------------------------------------------------------------------
+        # SECCION MANEJO DE EXCEPCIONES
+        # -------------------------------------------------------------------------------------------------
         
-        # --- SECCION MANEJO DE EXCEPCIONES ---  
         except httpx.TimeoutException:
             logger.error("Timeout en OpenRouter")
             raise ValueError("AI_TIMEOUT")
-
         except httpx.HTTPStatusError as e:
+            # Mapeo de errores HTTP a errores de negocio internos
             status_code = e.response.status_code
-            print("aca badgateway")
             logger.error(f"Error {status_code} de OpenRouter: {e.response.text}")
-            
             if status_code == 401:
                 raise ValueError("AI_AUTH_ERROR")
             elif status_code == 422:
                 raise ValueError("AI_VALIDATION_ERROR") 
             else:
                 raise ValueError("AI_PROVIDER_ERROR")
-
         except ValueError:
             # RELANZAMIENTO: Permite que errores de negocio (INPUT_INVALIDO) lleguen al Router
             raise
-        
         except Exception as e:
+            # Fallback crítico; logueamos el error y limpiamos el request huérfano
             logger.error(f"Error inesperado: {str(e)}")
             self.eliminar_registro(id_request_ia)
             raise ValueError("AI_UNKNOWN_ERROR")
     
-    # Funcion para procesar datos de entrada y persistirse en DB
     async def save_request(self,id_paciente: int, datos_clinicos: DatosClinicos):
+        """
+        Registra el input priginal en 'ia_request'.
+        Fundamental para trazavilidad y re-entrenamiento del modelo.
+        """
         response = supabase.table("ia_request").insert({
             "id_paciente": id_paciente,
             "datos_clinicos": datos_clinicos.model_dump()
         }).execute()
         return response.data[0]
     
-    # Funcion obtener todos los requests de un paciente
     def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
+        """
+        Recuperar el historial de peticiones (inputs) enviadas a la IA para un paciente.
+        """
         try:
+            # 1. Validación de entrada: Verificamos que el ID no sea nulo o cero.
             if not id_paciente:
                 return None
+            
+            # 2. Consulta ala tabla de auditoria:
+            # Filtramos por id_paciente y ordenamos cronológicamente (más reciente primero)
             response =(
                 supabase
                 .table("ia_request")
@@ -232,14 +247,24 @@ class AIService:
                 .order("fecha_request",  desc = True)
                 .execute()
             )
+
+            # 3. Retorno de datos: Devolvemos la lista de registros encontrados.
             return response.data
+        
         except Exception as e:
+            # 4. Registro de errores: Si falla la conexión con Supabase o la consulta,
+            # logueamos el detalle técnico y lanzamos un error de negocio.
             logger.error(f"Error obteniendo requests IA: {str(e)}")
             raise ValueError("DB_ERROR")
 
-    # Función para obtener todos los resumenes de la base de datos IA
     def total_resumenes_ia(self):
+        """
+        Recupera el listado completo de todos los informes generados por la IA.
+        Se utiliza principalmente para visitas administrativas o auditoria general.
+        """
         try:
+            # 1. Consulta global a Supabase: Traemos todos los registros de la tabla 'resumen_ia'.
+            # aplicamos un orden descendente por fecha para mostrar siempre la más nueva primero.
             response = (
                 supabase
                 .table("resumen_ia")
@@ -247,16 +272,29 @@ class AIService:
                 .order("fecha_generacion", desc= True)
                 .execute()
             )
+
+            # 2. Retorno de la data: FastAPI se encargará de convertir esta lista en el JSON de respuesta.
             return response.data
+
         except Exception as e:
+            # 3. Gestión de errores de infraestructura: Logueamos el error real para el desarrollador
+            # y lanzamos un ValueError genérico para que el Router lo transforme en un HTTP 500
             logger.error(f"Error obteniendo resumenes IA: {str(e)}")
             raise ValueError("DB_ERROR")
 
-    # Función para obtener todos los resumenes IA de un paciente
     def total_resumenes_ia_paciente(self, id_paciente: int) -> ResumenesPaciente:
+        """
+        Consulta el historial de informes/resúmenes generados por la IA
+        específicamente para un paciente.
+        """
         try:
+            # 1. Validación de seguridad: Evitamos consultas si no hay un ID de paciente.
             if not id_paciente:
                 return None
+            
+            # 2. Consulta filtrada en Supabase:
+            # Buscamos en la tabla 'resumen_ia' donde el ID coincida.
+            # Ordenamos por 'fecha_generacion' DESC para que el último análisis esté arriba.
             response = (
                 supabase
                 .table("resumen_ia")
@@ -265,14 +303,25 @@ class AIService:
                 .order("fecha_generacion", desc= True)
                 .execute()
             )
+
+            # 3. Retorno de la información: Devolvemos los datos para ser mostrados en el historial.
             return response.data
+        
         except Exception as e:
+            # 4. Control de errores: Registramos el fallo técnico para debugging
+            # y notificamos un error de base de datos a la capa superior.
             logger.error(f"Error obteniendo resumenes IA: {str(e)}")
             raise ValueError("DB_ERROR")
 
-    # Función obtener todos los requests de la base de datos IA
     def total_requests(self):
+        """
+        Recupera el historial global de todas las peticiones enviadas a la IA.
+        Sirve para auditoria general y monitoreo del volumen de uso del sistema.
+        """
         try:
+            # 1. Consulta a Supabase: Seleccionamos todos los campos de la tabla 'ia_request'.
+            # Usamos el orden descendente por 'fecha_request' para que el administrador
+            # vea siempre los últimos eventos en la parte superior.
             response = (
                 supabase
                 .table("ia_request")
@@ -280,18 +329,42 @@ class AIService:
                 .order("fecha_request", desc=True)
                 .execute()
             )
+
+            # 2. Retorno de datos: Devolvemos la lista de diccionarios con el input original.
             return response.data
+        
         except Exception as e:
+            # 3. Gestión de errores: Logueamos el error técnico para debugging.
+            # Lanazamos VAlueErrror para que la capa supuerior sepa que hubo un fallo de DB.
             logger.error(f"Error obteniendo resumenes IA: {str(e)}")
             raise ValueError("DB_ERROR") 
 
-    # Función para eliminar registro de la base de datos
     def eliminar_registro(self, id_registro : int):
+        """
+        Elimina un registro de auditoria de la 'ia_request'.
+        Se utiliza para limpieza autómatica cuando la generación de la IA falla
+        o cuando el input detectado es inválido.
+        """
         try:
+            # 1. Log de operación: Registramos el intento de eliminación para trazabilidad
             logger.info(f"Eliminando registro de auditoria invalido: {id_registro}")
-            response = supabase.table("ia_request").delete().eq("id_request_ia",id_registro).execute()
+            
+            # 2. Operación de borrado en Supabase:
+            # Filtramos por la clave primaria 'id_request_ia' para asegurar un borrado preciso.
+            response = (
+                supabase
+                .table("ia_request")
+                .delete()
+                .eq("id_request_ia",id_registro)
+                .execute()
+            )
+
+            # 3. Retrono de confirmación: Devolvemos la respuesta de la DB.
             return response
+        
         except Exception as e:
+            # 4. Manejo de errorres: Si falla la conexión, logueamos el error pero no
+            # lanzamos excepción hacia arriba para no interrumpir el flujo principal.
             logger.error(f"Error al intentar eliminar el registro {id_registro}: {str(e)}")
 
     async def close(self):
