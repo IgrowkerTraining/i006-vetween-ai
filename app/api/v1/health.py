@@ -24,7 +24,8 @@ async def health_check(ai_service: AIService = Depends(get_ai_service)):
     
     Returns the current health status of the service.
     """
-
+    LATENCIA_OK = 3.5
+    LATENCIA_WARN = 7.0
     # 1. Empezamos el cronómetro de alta precisión
     inicio = time.perf_counter() 
 
@@ -34,14 +35,17 @@ async def health_check(ai_service: AIService = Depends(get_ai_service)):
     latencia = time.perf_counter()  - inicio 
 
     # 3. Lógica de decisión según el rendimiento (Umbral de 0.5 seg)
-    if latencia > 0.5:
+    if latencia <= LATENCIA_OK:
+        # Estado óptimo: Todo funciona según los estándares
+        mensaje_estado = " El servicio funciona normalmente"
+        tipo_estado = "healthy"
+    elif latencia <= LATENCIA_WARN:
         # Estado degradado: El servicio responde, pero está lento
         mensaje_estado = "El servicio presenta latencia alta"
         tipo_estado = "dregraded"
     else:
-        # Estado óptimo: Todo funciona según los estándares
-        mensaje_estado = " El servicio funciona normalmente"
-        tipo_estado = "healthy"
+        mensaje_estado = "Servicio no disponible"
+        tipo_estado = "Unhealthy"
     
     # 4. Construir y retornar la respuesta estructurada
     return HealthResponse(
