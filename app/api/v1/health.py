@@ -23,15 +23,29 @@ async def health_check(ai_service: AIService = Depends(get_ai_service)):
     
     Returns the current health status of the service.
     """
-    start_time = time.perf_counter() # 1. Empezamos el cronómetro de alta precisión
+
+    # 1. Empezamos el cronómetro de alta precisión
+    inicio = time.perf_counter() 
 
     await ai_service.client.get("https://openrouter.ai/api/v1/models")
 
-    end_time = time.perf_counter() # 2. Terminamos el cronómetro
-    latency = end_time -start_time # 3. calculamos la diferencia
+    # 2. calculamos la diferencia
+    latencia = time.perf_counter()  - inicio 
+
+    # 3. Lógica de decisión según el rendimiento (Umbral de 0.5 seg)
+    if latencia > 0.5:
+        # Estado degradado: El servicio responde, pero está lento
+        mensaje_estado = "El servicio presenta latencia alta"
+        tipo_estado = "dregraded"
+    else:
+        # Estado óptimo: Todo funciona según los estándares
+        mensaje_estado = " El servicio funciona normalmente"
+        tipo_estado = "healthy"
+    
+    # 4. Construir y retornar la respuesta estructurada
     return HealthResponse(
-        status="healthy",
+        status=tipo_estado,
         timestamp=datetime.now(),
         version=settings.app_version,
-        message=f"Service is running normally. Latency: {latency:.4f}s" # 4. Lo mostramos en el mensaje
+        message=f"{mensaje_estado}. Latencia: {latencia:.4f}s" 
     )
