@@ -52,7 +52,7 @@ class DatosClinicos(BaseModel):
 
 class ResumeniaRequest(BaseModel):
     """Modelo principal para solicitar un nuevo resumen a la IA."""
-    model: str = Field(default="meta-llama/llama-3.3-70b-instruct:free", description="AI model to use")
+    model: str = Field(default="google/gemini-2.0-flash-001", description="AI model to use")
     
     # Campos obligatorios vinculados al a base de datos.
     id_paciente: int = Field(... , description="ID del paciente")
