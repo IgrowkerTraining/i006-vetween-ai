@@ -128,8 +128,8 @@ class AIService:
         # 1. Prompt Engineering: Cargamos instruccions externas y armamos el historial
         system_prompt = cargar_prompt()
         messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Generá un resumen estructuradocon estos datos: {request.datos_clinicos}"}
+            #{"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"INSTRUCCIONES DE SISTEMA: \n{system_prompt}\n\n CONSULTA DEL USUARIO:{request.datos_clinicos}"}
         ]
 
         # 2. Preparacion del Payload siguiendo el contrato de OpenRoute/Gemini
