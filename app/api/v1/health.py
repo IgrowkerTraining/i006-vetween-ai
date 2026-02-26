@@ -9,6 +9,7 @@ from app.core.logging import get_logger
 import time 
 from app.services.ai_service import AIService
 from app.api.dependencies import get_ai_service
+import app.test.test_ia as test_ia
 
 
 logger = get_logger(__name__)
@@ -27,7 +28,7 @@ async def health_check(ai_service: AIService = Depends(get_ai_service)):
     # 1. Empezamos el cronómetro de alta precisión
     inicio = time.perf_counter() 
 
-    await ai_service.client.get("https://openrouter.ai/api/v1/models")
+    await test_ia.ping_ia()
 
     # 2. calculamos la diferencia
     latencia = time.perf_counter()  - inicio 
