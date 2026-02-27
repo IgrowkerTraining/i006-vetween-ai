@@ -24,7 +24,7 @@ from app.core.security import mask_api_key
 
 import os
 
-def cargar_prompt(nombre_archivo="system_prompt.txt"):
+def cargar_prompt(nombre_archivo="system_prompt_gemma.txt"):
     """
     Carga las instrucciones del sistema desde un archivo de texto.
     Esto permite modificar el comportamiento de la IA sin tocar el código Python.
