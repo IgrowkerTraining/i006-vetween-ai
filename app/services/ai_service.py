@@ -24,7 +24,7 @@ from app.core.security import mask_api_key
 
 import os
 
-def cargar_prompt(nombre_archivo="system_prompt_gemma.txt"):
+def cargar_prompt(nombre_archivo="system_prompt.txt"):
     """
     Carga las instrucciones del sistema desde un archivo de texto.
     Esto permite modificar el comportamiento de la IA sin tocar el código Python.
@@ -67,9 +67,9 @@ class AIService:
         """
         # Configruación del cliente con headers obligatorios de OpenRouter
         self.client = httpx.AsyncClient(
-            base_url=settings.openrouter_base_url,
+            base_url=settings.nvidia_api_url,
             headers={
-                "Authorization": f"Bearer {settings.openrouter_api_key}",
+                "Authorization": f"Bearer {settings.nvidia_api_key}",
                 "Content-Type": "application/json",
                 "HTTP-Referer": "https://github.com/your-username/template-python-fastapi",
                 "X-Title": settings.app_name,
