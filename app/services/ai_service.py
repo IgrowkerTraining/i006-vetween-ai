@@ -17,14 +17,15 @@ from app.models.schemas import (
     RequestsPaciente , 
     ResumeniaRequest, 
     ResumeniaResponse, 
-    ModelInfo
+    ModelInfo,
+    Vacunas
 )
 from app.core.logging import get_logger
 from app.core.security import mask_api_key
-
+from dateutil.relativedelta import relativedelta
 import os
 
-def cargar_prompt(nombre_archivo="system_prompt.txt"):
+def cargar_prompt(nombre_archivo="system_prompt_llam_v2.txt"):
     """
     Carga las instrucciones del sistema desde un archivo de texto.
     Esto permite modificar el comportamiento de la IA sin tocar el código Python.
@@ -51,6 +52,105 @@ def cargar_prompt(nombre_archivo="system_prompt.txt"):
         print(f" Error inesperado al cargar el prompt: {e}")
         return "Error interno al cargar instrucciones."
 
+CORE_GROUPS = {
+    "CORE_MULTIPLE": {
+        "vigencia_meses": 12,
+        "keywords": [
+            "sextuple", "séxtuple",
+            "quintuple", "quíntuple",
+            "dhpp", "dhppi",
+            "vanguard",
+            "nobivac",
+            "biocan",
+            "moquillo",
+            "parvovirus",
+            "adenovirus",
+            "leptospira"
+        ]
+    },
+    "RABIA": {
+        "vigencia_meses": 12,
+        "keywords": [
+            "rabia",
+            "antirrabica",
+            "antirrábica",
+            "defensor",
+            "rabisin"
+        ]
+    }
+}
+
+import unicodedata
+
+def normalizar_texto(texto: str) -> str:
+    texto = texto.lower()
+    texto = unicodedata.normalize("NFD", texto)
+    texto = texto.encode("ascii", "ignore").decode("utf-8")
+    return texto
+
+def clasificar_vacuna(vacuna: Vacunas) -> str:
+    texto = normalizar_texto(
+        (vacuna.tipo or "") + " " +
+        (vacuna.nombre_cientifico or "")
+    )
+
+    for grupo, data in CORE_GROUPS.items():
+        for keyword in data["keywords"]:
+            if keyword in texto:
+                return grupo
+
+    return "DESCONOCIDA"
+
+def evaluar_vacunas(vacunas: list[Vacunas], fecha_actual: str):
+    historial = []
+    esquema_incompleto = False
+    riesgo_legal = False
+
+    try:
+        # Si fecha_actual no es YYYY-MM-DD, esto fallaría sin el try
+        fecha_actual_dt = datetime.strptime(fecha_actual, "%Y-%m-%d")
+        
+        for vacuna in vacunas:
+            try:
+                # Si vacuna.fecha_aplicacion es "string", esto fallaría
+                fecha_aplicacion = datetime.strptime(vacuna.fecha_aplicacion, "%Y-%m-%d")
+                grupo = clasificar_vacuna(vacuna)
+
+                if grupo != "DESCONOCIDA":
+                    # Asumo que CORE_GROUPS está definido globalmente
+                    meses = CORE_GROUPS.get(grupo, {}).get("vigencia_meses", 12)
+                else:
+                    meses = 12
+                
+                fecha_vencimiento = fecha_aplicacion + relativedelta(months=meses)
+
+                if fecha_actual_dt > fecha_vencimiento:
+                    estado = "VENCIDA"
+                    esquema_incompleto = True
+                    if grupo == "RABIA":
+                        riesgo_legal = True
+                else:
+                    estado = "AL_DIA"
+                
+                historial.append({
+                    "nombre": vacuna.tipo,
+                    "grupo_sanitario": grupo,
+                    "fecha_aplicacion": vacuna.fecha_aplicacion,
+                    "estado": estado
+                })
+            except (ValueError, TypeError, KeyError):
+                # Si una vacuna individual tiene basura, la ignoramos y seguimos
+                continue
+
+    except (ValueError, TypeError):
+        # Si la fecha_actual es inválida, devolvemos el esquema base vacío
+        print("Aviso: Error de formato en pre-procesamiento. Delegando validación a la IA.")
+    
+    return {
+        "historial_vacunas": historial,
+        "esquema_incompleto": esquema_incompleto,
+        "riesgo_legal": riesgo_legal
+    }
 logger = get_logger(__name__)
 
 
@@ -121,15 +221,39 @@ class AIService:
             logger.error(f"AI service health check failed: {str(e)}")
             return False
     
-    async def generar_resumenia(self, request: ResumeniaRequest ,id_request_ia: int) -> ResumeniaResponse :
+    async def generar_resumenia(self, 
+                                request: ResumeniaRequest ,
+                                id_request_ia: int,
+                                fecha_actual: str
+                                ) -> ResumeniaResponse :
         """Cordina la generación del resumen médico con IA y su persistencia
         en la base de datos."""
-
+        
+        fecha_referencia = datetime.fromisoformat(fecha_actual).strftime("%Y-%m-%d")
+        
+        datos_modelo = request.datos_clinicos
+        
+        resultado_sanitario = evaluar_vacunas(
+            datos_modelo.vacunas,
+            fecha_referencia
+        )
+        
+        datos = datos_modelo.model_dump()
+        datos["evaluacion_sanitaria"] = resultado_sanitario
+        datos["fecha_actual"] = fecha_referencia
+        
         # 1. Prompt Engineering: Cargamos instruccions externas y armamos el historial
         system_prompt = cargar_prompt()
         messages = [
-            #{"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"INSTRUCCIONES DE SISTEMA: \n{system_prompt}\n\n CONSULTA DEL USUARIO:{request.datos_clinicos}"}
+            {"role": "system", "content": system_prompt},
+            {
+        "role": "user", 
+        "content": (
+            "INICIO DE DATOS DEL PACIENTE ACTUAL:\n"
+            f"'''json\n{datos}\n'''\n"
+            "FIN DE DATOS. Generá el resumen médico siguiendo estrictamente el protocolo."
+        )
+    }
         ]
 
         # 2. Preparacion del Payload siguiendo el contrato de OpenRoute/Gemini
@@ -140,6 +264,8 @@ class AIService:
             "temperature": request.temperature,
             "stream": request.stream,
         }
+
+        print(f"DEBUG 1 - Fecha recibida: {fecha_actual} (Tipo: {type(fecha_actual)})")
 
         try:
             # 3. LLamada a la API externa

@@ -63,10 +63,16 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
             request.datos_clinicos
         )
         id_request = guardar_request["id_request_ia"]
-
+        fecha_actual = guardar_request["fecha_request"]
+        
+        print(request)
         # Generación y persistencia automática del resumen (Output)
         # Nota: 'generar_resumenia' internamente guarda el resultado en DB
-        data = await ai_service.generar_resumenia(request,id_request)
+        data = await ai_service.generar_resumenia(
+            request,
+            id_request,
+            fecha_actual
+            )
         return data
     
     except ValueError as e:
