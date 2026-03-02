@@ -43,11 +43,6 @@ async def health_check(ai_service: AIService = Depends(get_ai_service)):
         mensaje_estado = " El servicio funciona normalmente"
         tipo_estado = "healthy"
     elif latencia <= LATENCIA_WARN:
-    if latencia <= LATENCIA_OK:
-        # Estado óptimo: Todo funciona según los estándares
-        mensaje_estado = " El servicio funciona normalmente"
-        tipo_estado = "healthy"
-    elif latencia <= LATENCIA_WARN:
         # Estado degradado: El servicio responde, pero está lento
         mensaje_estado = "El servicio presenta latencia alta"
         tipo_estado = "dregraded"
