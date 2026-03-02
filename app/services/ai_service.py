@@ -379,23 +379,33 @@ class AIService:
     
     import hashlib
     def generar_hash(self, id_paciente: int ,datos : DatosClinicos ):
+        """
+        Genera el hash del input original
+        """
+
+        # 1. Guardamos en un diccionario todos los datos.
         registro = {
             "id_p": id_paciente,
+            # Desacoplamos Pydantic para extraer los datos puros
             "datos_c": datos.model_dump()
         }
-
+        
+        # 2. Serializamos el JSON con las claves ordenadas
         carga_string = json.dumps(registro, sort_keys= True)
         
+        # 3. Retornamos el hash del registro
         return self.hashlib.sha256(carga_string.encode()).hexdigest()
     
     async def save_request(self,id_paciente: int, datos_clinicos: DatosClinicos):
         """
-        Registra el input priginal en 'ia_request'.
+        Registra el input original en 'ia_request'.
         Fundamental para trazavilidad y re-entrenamiento del modelo.
         """
+        # 1. Generamos el hash del registro.
         hash_request = self.generar_hash(id_paciente,datos_clinicos)        
 
         try:
+            # 2. Persistimos la información en la DB.
             response = supabase.table("ia_request").insert({
                 "id_paciente": id_paciente,
                 "datos_clinicos": datos_clinicos.model_dump(),
