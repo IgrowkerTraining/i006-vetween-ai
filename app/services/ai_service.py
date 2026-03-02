@@ -25,7 +25,7 @@ from app.core.security import mask_api_key
 from dateutil.relativedelta import relativedelta
 import os
 
-def cargar_prompt(nombre_archivo="system_prompt_llam_v2.txt"):
+def cargar_prompt(nombre_archivo="system_prompt_llama_v3.txt"):
     """
     Carga las instrucciones del sistema desde un archivo de texto.
     Esto permite modificar el comportamiento de la IA sin tocar el código Python.
@@ -152,14 +152,17 @@ def evaluar_vacunas(vacunas: list[Vacunas], fecha_actual: str):
                 
                 fecha_vencimiento = fecha_aplicacion + relativedelta(months=meses)
 
+                # 4. Lógica de Flags: Comparamos contra la fecha de referencia para detectar vencimientos.
                 if fecha_actual_dt > fecha_vencimiento:
                     estado = "VENCIDA"
                     esquema_incompleto = True
+                    # Alerta Crítica: La rabia vencida implica un riesgo legal para el propietario.
                     if grupo == "RABIA":
                         riesgo_legal = True
                 else:
                     estado = "AL_DIA"
                 
+                # 5. Estructuración: Creamos un diccionario limpio que la IA pueda interpretar fácilmente.
                 historial.append({
                     "nombre": vacuna.tipo,
                     "grupo_sanitario": grupo,
@@ -202,10 +205,10 @@ class AIService:
                 "HTTP-Referer": "https://github.com/your-username/template-python-fastapi",
                 "X-Title": settings.app_name,
             },
-            timeout=60.0 # Tiempo de espera extendido para procesamiento de LLMs
+            timeout=140.0 # Tiempo de espera extendido para procesamiento de LLMs
         )
         # Log de confirmación con enmascaramiento de credenciales por seguridad
-        logger.info(f"AI Service initialized with API key: {mask_api_key(settings.openrouter_api_key)}")  
+        logger.info(f"AI Service initialized with API key: {mask_api_key(settings.nvidia_api_key)}")  
     
     async def list_models(self) -> List[ModelInfo]:
         """List available models from OpenRouter."""
@@ -273,16 +276,19 @@ class AIService:
         # 1. Prompt Engineering: Cargamos instruccions externas y armamos el historial
         system_prompt = cargar_prompt()
         messages = [
-            {"role": "system", "content": system_prompt},
             {
-        "role": "user", 
-        "content": (
-            "INICIO DE DATOS DEL PACIENTE ACTUAL:\n"
-            f"'''json\n{datos}\n'''\n"
-            "FIN DE DATOS. Generá el resumen médico siguiendo estrictamente el protocolo."
-        )
-    }
-        ]
+                "role": "system", 
+                "content": f"{system_prompt}<|eot|>"
+            },
+            {
+                "role": "user", 
+                "content": (
+                    "DATOS DEL PACIENTE:\n"
+                    f"```json\n{datos}\n```\n"
+                    "Transforma estos datos en un resumen narrativo fluido, profesional y humano.<|eot|>"
+                )
+            }
+        ]   
 
         # 2. Preparacion del Payload siguiendo el contrato de OpenRoute/Gemini
         payload = {
@@ -355,7 +361,7 @@ class AIService:
         except httpx.HTTPStatusError as e:
             # Mapeo de errores HTTP a errores de negocio internos
             status_code = e.response.status_code
-            logger.error(f"Error {status_code} de OpenRouter: {e.response.text}")
+            logger.error(f"Error {status_code} de Nvidia: {e.response.text}")
             if status_code == 401:
                 raise ValueError("AI_AUTH_ERROR")
             elif status_code == 422:
