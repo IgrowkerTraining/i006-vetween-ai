@@ -382,19 +382,22 @@ class AIService:
         """
         Genera el hash del input original
         """
-
-        # 1. Guardamos en un diccionario todos los datos.
-        registro = {
-            "id_p": id_paciente,
-            # Desacoplamos Pydantic para extraer los datos puros
-            "datos_c": datos.model_dump()
-        }
+        try:
+            # 1. Guardamos en un diccionario todos los datos.
+            registro = {
+                "id_p": id_paciente,
+                # Desacoplamos Pydantic para extraer los datos puros
+                "datos_c": datos.model_dump()
+            }
         
-        # 2. Serializamos el JSON con las claves ordenadas
-        carga_string = json.dumps(registro, sort_keys= True)
+            # 2. Serializamos el JSON con las claves ordenadas
+            carga_string = json.dumps(registro, sort_keys= True)
         
-        # 3. Retornamos el hash del registro
-        return self.hashlib.sha256(carga_string.encode()).hexdigest()
+            # 3. Retornamos el hash del registro
+            return self.hashlib.sha256(carga_string.encode()).hexdigest()
+        except Exception as e:
+            print(f"Error al hashear el registro: {str(e)}")
+    
     
     async def save_request(self,id_paciente: int, datos_clinicos: DatosClinicos):
         """
@@ -413,7 +416,7 @@ class AIService:
             }).execute()
             return response.data[0]
         except Exception as e:
-            logger.info(f"Error guardando datos en DB: str({e})")
+            logger.info(f"Error guardando datos en DB: {str(e)}")
     
     def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
         """
