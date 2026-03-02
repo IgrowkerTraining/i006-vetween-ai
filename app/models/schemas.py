@@ -109,7 +109,7 @@ class ModeloRequest(BaseModel):
     id_paciente : int = Field(..., description="ID del paciente")
     datos_clinicos : DatosClinicos = Field(..., description="Historia clinica del paciente")
     fecha_request: datetime = Field(..., description="Fecha del request" )
-
+    hash: str = Field (... , description= "Hash del request")
 class RequestsPaciente(BaseModel):
     """Lista de peticiones realizadas por un paciente."""
     data: List[ModeloRequest] 

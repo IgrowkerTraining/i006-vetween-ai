@@ -213,7 +213,7 @@ class AIService:
     async def list_models(self) -> List[ModelInfo]:
         """List available models from OpenRouter."""
         try:
-            logger.info("Fetching available models from OpenRouter")
+            logger.info("Fetching available models from NVIDIA NMI")
             response = await self.client.get("/models")
             response.raise_for_status()
             
@@ -234,7 +234,7 @@ class AIService:
             return models
             
         except httpx.HTTPStatusError as e:
-            error_msg = f"OpenRouter API error: {e.response.status_code} - {e.response.text}"
+            error_msg = f"NVIDIA NMI API error: {e.response.status_code} - {e.response.text}"
             logger.error(error_msg)
             raise Exception(error_msg)
         except Exception as e:
@@ -377,16 +377,33 @@ class AIService:
             self.eliminar_registro(id_request_ia)
             raise ValueError("AI_UNKNOWN_ERROR")
     
+    import hashlib
+    def generar_hash(self, id_paciente: int ,datos : DatosClinicos ):
+        registro = {
+            "id_p": id_paciente,
+            "datos_c": datos.model_dump()
+        }
+
+        carga_string = json.dumps(registro, sort_keys= True)
+        
+        return self.hashlib.sha256(carga_string.encode()).hexdigest()
+    
     async def save_request(self,id_paciente: int, datos_clinicos: DatosClinicos):
         """
         Registra el input priginal en 'ia_request'.
         Fundamental para trazavilidad y re-entrenamiento del modelo.
         """
-        response = supabase.table("ia_request").insert({
-            "id_paciente": id_paciente,
-            "datos_clinicos": datos_clinicos.model_dump()
-        }).execute()
-        return response.data[0]
+        hash_request = self.generar_hash(id_paciente,datos_clinicos)        
+
+        try:
+            response = supabase.table("ia_request").insert({
+                "id_paciente": id_paciente,
+                "datos_clinicos": datos_clinicos.model_dump(),
+                "hash": hash_request
+            }).execute()
+            return response.data[0]
+        except Exception as e:
+            logger.info(f"Error guardando datos en DB: str({e})")
     
     def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
         """
