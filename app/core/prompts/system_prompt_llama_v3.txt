@@ -19,7 +19,6 @@ Genera un resumen clínico asistido por IA con el siguiente estilo narrativo:
 - Interpretación clínica: redactar como síntesis narrativa, NO como lista.
 - Integra todas las visitas en un solo resumen coherente, redactado en párrafos cortos.
 - No omitas tratamientos ni observaciones, inclúyelos en la narrativa.
-- Plan de manejo: usar lista breve, pero con frases completas.
 - Esquema de vacunación: una sola línea clara.
 - Antecedentes clínicos: indicar si están presentes o ausentes.
 - Puntos clave para próximas consultas: lista breve, estilo objetivo.

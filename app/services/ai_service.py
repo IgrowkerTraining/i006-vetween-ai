@@ -53,7 +53,8 @@ def cargar_prompt(nombre_archivo="system_prompt_llama_v3.txt"):
         return "Error interno al cargar instrucciones."
 
 CORE_GROUPS = {
-    "CORE_MULTIPLE": {
+    #----- CANINOS -----
+    "CORE_MULTIPLE_CANINA": {
         "vigencia_meses": 12,
         "keywords": [
             "sextuple", "séxtuple",
@@ -68,6 +69,22 @@ CORE_GROUPS = {
             "leptospira"
         ]
     },
+    #----- FELINOS -----
+    "CORE_MULTIPLE_FELINA":{
+        "vigencia_meses": 12,
+        "keywords": [
+            "triple felina", "tcl", "panleucopenia", 
+            "calicivirus", "rinotraqueitis", "felocell", 
+            "nobivac tricat", "filavac"
+        ]
+    },
+    "LECUEMIA_FELINA":{
+        "vigencia_meses": 12,
+        "keywords": [
+            "leucemia", "felv", "leucocell", "purevax felv"
+        ]
+    },
+    #----- UNIVERSAL -----
     "RABIA": {
         "vigencia_meses": 12,
         "keywords": [
