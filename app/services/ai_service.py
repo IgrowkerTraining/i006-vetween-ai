@@ -558,7 +558,12 @@ class AIService:
             logger.error(f"Error al intentar eliminar el registro {id_registro}: {str(e)}")
 
     def registrar_metricas_db(self, resultado: str, segundos: float , error: str = None):
+        """
+        Registra las metricas de rendimiento y auditoria del servicio IA.
+        Se persisten latencia, tipo de respuesta (CACHE_HIT/CACHE_MISS/FALLO) y detalles de error
+        """
         try:
+            # 1. Persistimos los datos en la tabla "metricas_ia" en la DB.
             supabase.table("metricas_ia").insert({
                 "resultado": resultado,
                 "duracion": segundos,
@@ -566,6 +571,7 @@ class AIService:
             }).execute()
     
         except Exception as e:
+            # 2. Logueamos el error si falla la persistencia.
             logger.error(f"no se pudo guardar la métrica: {e}")
 
     async def close(self):

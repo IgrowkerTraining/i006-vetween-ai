@@ -70,7 +70,7 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
             request.datos_clinicos
         )
         if not guardar_request:
-            # Si es None, lanzamos un error claro
+            # Si es None, enviamos al cliente el resumen persistido para ese request exacto
             resultado_metrica = "CACHE_HIT"
             id_paciente = int(request.id_paciente)
             data = ai_service.total_resumenes_ia_paciente(id_paciente)
