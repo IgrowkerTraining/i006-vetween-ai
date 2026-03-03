@@ -221,7 +221,6 @@ class AIService:
             self.eliminar_registro(id_request_ia)
             raise ValueError("AI_UNKNOWN_ERROR")
 
-    
     def generar_hash(self, id_paciente: int ,datos : DatosClinicos ):
         """
         Genera el hash del input original
@@ -261,7 +260,6 @@ class AIService:
             return response.data[0]
         except Exception as e:
             logger.info(f"Error guardando datos en DB: {str(e)}")
-            
 
     def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
         """
