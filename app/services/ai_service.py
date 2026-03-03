@@ -356,7 +356,7 @@ class AIService:
         # -------------------------------------------------------------------------------------------------
         
         except httpx.TimeoutException:
-            logger.error("Timeout en OpenRouter")
+            logger.error("Timeout en NVIDIA NMI")
             raise ValueError("AI_TIMEOUT")
         except httpx.HTTPStatusError as e:
             # Mapeo de errores HTTP a errores de negocio internos

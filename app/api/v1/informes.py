@@ -92,6 +92,13 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
     except ValueError as e:
         resultado_metrica = "FALLO"
         error_msg = str(e)
+
+        try:
+            ai_service.eliminar_registro(id_request)
+            logger.info(f"Registro {id_request} eliminado por fallo en IA.")
+        except Exception as delete_error:
+            logger.error(f"No se pudo limpiar el registro fallido: {str(delete_error)}")
+        
         # Mapeo de errores específicos del servicio de IA
         if error_msg == "AI_TIMEOUT":
             raise HTTPException(
