@@ -25,6 +25,11 @@ def setup_logging() -> None:
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
     
+    # File Handler
+    file_handler = logging.FileHandler("api_vetween_ia.log")
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
+    
     # Configure specific loggers
     logging.getLogger("uvicorn").setLevel(logging.INFO)
     logging.getLogger("uvicorn.access").setLevel(logging.INFO)
