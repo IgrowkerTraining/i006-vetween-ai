@@ -6,6 +6,7 @@ prompts y la persistencia de datos en Supabase.
 
 import httpx
 import json
+import hashlib
 from datetime import datetime
 from typing import List
 from app.core.database import supabase
@@ -30,7 +31,7 @@ class AIService:
     Sercivio para imteractuar con la API de OpenROuter y gestionar 
     el ciclo de vida de los informes de IA.
     """
-    
+
     def __init__(self):
         """
         inicializa el cliente HTTP asíncronico con la configuracion de OpenRouter.
@@ -49,7 +50,7 @@ class AIService:
         )
         # Log de confirmación con enmascaramiento de credenciales por seguridad
         logger.info(f"AI Service initialized with API key: {mask_api_key(settings.nvidia_api_key)}")  
-    
+
     async def list_models(self) -> List[ModelInfo]:
         """List available models from OpenRouter."""
         try:
@@ -81,7 +82,7 @@ class AIService:
             error_msg = f"Error fetching models: {str(e)}"
             logger.error(error_msg)
             raise Exception(error_msg)
-    
+
     async def health_check(self) -> bool:
         """Check if the AI service is healthy."""
         try:
@@ -91,7 +92,7 @@ class AIService:
         except Exception as e:
             logger.error(f"AI service health check failed: {str(e)}")
             return False
-    
+
     async def generar_resumenia(self, 
                                 request: ResumeniaRequest ,
                                 id_request_ia: int,
@@ -164,7 +165,7 @@ class AIService:
             # 7. Lógica de limpieza: Si el input fue inválido, eliminamos el registro de auditoria
             if isinstance(ia_output, dict) and ia_output.get("error") == "INPUT_INVALIDO":
                     logger.warning(f"Inteto de resumen invalido para paciente {request.id_paciente}")
-                    self.eliminar_registro(id_request_ia)
+                    logger.error(f"AI_INPUT_INVALID: {str(request)}")
                     raise ValueError("AI_INPUT_INVALID")
             
             # 8. Extracción de campos obligatorios según el Schema
@@ -203,10 +204,13 @@ class AIService:
             status_code = e.response.status_code
             logger.error(f"Error {status_code} de Nvidia: {e.response.text}")
             if status_code == 401:
+                logger.error(f"AI_AUTH_ERROR: {str(e)}")
                 raise ValueError("AI_AUTH_ERROR")
             elif status_code == 422:
+                logger.error(f"AI_VALIDATION_ERROR: {str(e)}")
                 raise ValueError("AI_VALIDATION_ERROR") 
             else:
+                logger.error(f"AI_PROVIDER_ERROR: {str(e)}")
                 raise ValueError("AI_PROVIDER_ERROR")
         except ValueError:
             # RELANZAMIENTO: Permite que errores de negocio (INPUT_INVALIDO) lleguen al Router
@@ -216,8 +220,8 @@ class AIService:
             logger.error(f"Error inesperado: {str(e)}")
             self.eliminar_registro(id_request_ia)
             raise ValueError("AI_UNKNOWN_ERROR")
+
     
-    import hashlib
     def generar_hash(self, id_paciente: int ,datos : DatosClinicos ):
         """
         Genera el hash del input original
@@ -234,11 +238,11 @@ class AIService:
             carga_string = json.dumps(registro, sort_keys= True)
         
             # 3. Retornamos el hash del registro
-            return self.hashlib.sha256(carga_string.encode()).hexdigest()
+            return hashlib.sha256(carga_string.encode()).hexdigest()
         except Exception as e:
-            print(f"Error al hashear el registro: {str(e)}")
-    
-    
+            logger.error(f"Error al hashear el registro: {str(e)}")
+            raise e
+
     async def save_request(self,id_paciente: int, datos_clinicos: DatosClinicos):
         """
         Registra el input original en 'ia_request'.
@@ -257,7 +261,8 @@ class AIService:
             return response.data[0]
         except Exception as e:
             logger.info(f"Error guardando datos en DB: {str(e)}")
-    
+            
+
     def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
         """
         Recuperar el historial de peticiones (inputs) enviadas a la IA para un paciente.
@@ -396,6 +401,7 @@ class AIService:
             # 4. Manejo de errorres: Si falla la conexión, logueamos el error pero no
             # lanzamos excepción hacia arriba para no interrumpir el flujo principal.
             logger.error(f"Error al intentar eliminar el registro {id_registro}: {str(e)}")
+            raise ValueError("DB_ERROR")
 
     def registrar_metricas_db(self, resultado: str, segundos: float , error: str = None):
         """
