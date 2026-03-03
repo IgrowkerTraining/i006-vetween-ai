@@ -557,6 +557,17 @@ class AIService:
             # lanzamos excepción hacia arriba para no interrumpir el flujo principal.
             logger.error(f"Error al intentar eliminar el registro {id_registro}: {str(e)}")
 
+    def registrar_metricas_db(self, resultado: str, segundos: float , error: str = None):
+        try:
+            supabase.table("metricas_ia").insert({
+                "resultado": resultado,
+                "duracion": segundos,
+                "mensaje_error" : error
+            }).execute()
+    
+        except Exception as e:
+            logger.error(f"no se pudo guardar la métrica: {e}")
+
     async def close(self):
         """Close the HTTP client."""
         await self.client.aclose()

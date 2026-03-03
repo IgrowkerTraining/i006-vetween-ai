@@ -16,6 +16,7 @@ from app.models.schemas import (
 from app.services.ai_service import AIService
 from app.api.dependencies import get_ai_service
 from app.core.logging import get_logger
+import time
 
 # Configuración de Logger y Router
 logger = get_logger(__name__)
@@ -54,6 +55,12 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
     3. Persiste el resumen generado por la IA en la base de datos (Output).
     4. Devuelve el análisis procesado al cliente.
     """
+
+    #----- INICIO CRONOMETRO --------
+    inicio_c = time.perf_counter()
+    resultado_metrica = "FALLO_DESCONOCIDO"
+    error_msg = None
+
     try:
         logger.info(f"Procesando resumen con modelo: {request.model}")
         
@@ -64,10 +71,12 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
         )
         if not guardar_request:
             # Si es None, lanzamos un error claro
+            resultado_metrica = "CACHE_HIT"
             id_paciente = int(request.id_paciente)
             data = ai_service.total_resumenes_ia_paciente(id_paciente)
             return data[0]
         else:
+            resultado_metrica = "CACHE_MISS"
             id_request = guardar_request["id_request_ia"]
             fecha_actual = guardar_request["fecha_request"]
         
@@ -81,6 +90,7 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
             return data
     
     except ValueError as e:
+        resultado_metrica = "FALLO"
         error_msg = str(e)
         # Mapeo de errores específicos del servicio de IA
         if error_msg == "AI_TIMEOUT":
@@ -117,6 +127,16 @@ async def resumen_ia(request: ResumeniaRequest, ai_service: AIService = Depends(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                 detail="Ocurrió un error inesperado al procesar la IA."
             )
+
+    finally:
+        fin_c = time.perf_counter()
+        latencia = fin_c - inicio_c
+
+        ai_service.registrar_metricas_db(
+            resultado= resultado_metrica,
+            segundos= latencia,
+            error= error_msg
+        )
 
 @router.get("/resumenia", response_model=List[ModeloResumen])
 def listar_todos_los_resumenes(ai_service: AIService = Depends(get_ai_service)):
