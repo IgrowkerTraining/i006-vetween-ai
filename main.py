@@ -2,8 +2,10 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request,status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from app.config.settings import settings
 from app.core.logging import setup_logging, get_logger
@@ -31,12 +33,36 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="FastAPI template with OpenRouter AI integration",
+    description="FastAPI template with NVIDIA NMI AI integration",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # 1. Extraemos los errores de Pydantic
+    errors = exc.errors()
+    
+    for error in errors:
+        # Aquí capturamos tu mensaje: "Inconsistencia: Felinos con vacuna Séxtuple canina"
+        msg = error.get("msg")
+        loc = error.get("loc")
+        
+        # 2. LO FORZAMOS AL LOG AQUÍ (Esto no puede fallar)
+        logger.error(f"ERROR DE NEGOCIO DETECTADO: {msg} en {loc}")
+
+    # 3. Retornamos el 422 original para no romper el contrato con el frontend
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "status": "error",
+            "code": "VALIDATION_ERROR",
+            "message": "Los datos enviados son inconsistentes o invalidos",
+            "details": errors  # Aquí viaja tu "Inconsistencia detectada: El paciente es Felinos..."
+        }
+    )
 
 # Add CORS middleware
 app.add_middleware(

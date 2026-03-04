@@ -1,9 +1,11 @@
 """Pydantic models for request/response schemas."""
 
-from pydantic import BaseModel, Field ,ConfigDict
+from pydantic import BaseModel, Field ,ConfigDict ,model_validator
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+import logging
 
+logger = logging.getLogger("uvicorn.error")
 
 class ChatMessage(BaseModel):
     """Chat message model."""
@@ -49,6 +51,35 @@ class DatosClinicos(BaseModel):
     paciente: Paciente
     visitas: List[Visitas]
     vacunas: List[Vacunas]
+
+    @model_validator(mode='after')
+    def verificar_coherencia_especie(self)-> 'DatosClinicos':
+
+        especie_original = self.paciente.especie.lower()[:4]
+
+        REGLAS_EXCLUSION = {
+            "feli": ["cani","perr","porc", "equi","bovi"],
+            "cani": ["feli","gato","gata", "porc","equi","bovi"],
+            "perr": ["feli","gato","gata","porc","equi","bovi"],
+            "gato": ["perr","cani","porc","equi","bovi"],
+            "gata": ["perr","cani","porc","equi","bovi"]
+        }
+
+        palabras_prohibidas = []
+        for k , prohibidas in REGLAS_EXCLUSION.items():
+            if k in especie_original:
+                palabras_prohibidas = prohibidas
+                break
+        for vacuna in self.vacunas:
+            texto_vacuna = (vacuna.tipo + " " + vacuna.nombre_cientifico).lower()
+
+            for prohibida in palabras_prohibidas:
+                if prohibida in texto_vacuna:
+                    logger.error(f"Inconsistencia detectada: El paciente es {self.paciente.especie}"
+                        f"pero la vacuna '{vacuna.tipo} parece ser para otra especie.")
+                    raise ValueError("AI_INPUT_INVALID")
+                
+        return self
 
 class ResumeniaRequest(BaseModel):
     """Modelo principal para solicitar un nuevo resumen a la IA."""
@@ -154,3 +185,6 @@ class RootResponse(BaseModel):
     version: str = Field(..., description="Version 1.0")
     docs: str = Field(..., description="Documentación URL")
     health: str = Field(..., description="Health check URL")
+
+
+
