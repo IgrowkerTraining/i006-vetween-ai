@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request,status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 
 from app.config.settings import settings
 from app.core.logging import setup_logging, get_logger
@@ -56,12 +57,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     # 3. Retornamos el 422 original para no romper el contrato con el frontend
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={
+        content=jsonable_encoder({
             "status": "error",
             "code": "VALIDATION_ERROR",
             "message": "Los datos enviados son inconsistentes o invalidos",
             "details": errors  # Aquí viaja tu "Inconsistencia detectada: El paciente es Felinos..."
-        }
+        })
     )
 
 # Add CORS middleware

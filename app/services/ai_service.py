@@ -138,6 +138,7 @@ class AIService:
             "max_tokens": request.max_tokens,
             "temperature": request.temperature,
             "stream": request.stream,
+            "response_format": { "type": "json_object" }
         }
 
         print(f"DEBUG 1 - Fecha recibida: {fecha_actual} (Tipo: {type(fecha_actual)})")
