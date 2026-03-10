@@ -1,15 +1,38 @@
 from app.core.database import supabase
 from app.core.logging import get_logger
+from app.models.schemas import DatosClinicos,RequestsPaciente,ResumenesPaciente
+import json, hashlib
 
 logger = get_logger(__name__)
 
-async def save_request(self,id_paciente: int, datos_clinicos: DatosClinicos):
+def generar_hash(id_paciente: int ,datos : DatosClinicos ):
+        """
+        Genera el hash del input original
+        """
+        try:
+            # 1. Guardamos en un diccionario todos los datos.
+            registro = {
+                "id_p": id_paciente,
+                # Desacoplamos Pydantic para extraer los datos puros
+                "datos_c": datos.model_dump()
+            }
+        
+            # 2. Serializamos el JSON con las claves ordenadas
+            carga_string = json.dumps(registro, sort_keys= True)
+        
+            # 3. Retornamos el hash del registro
+            return hashlib.sha256(carga_string.encode()).hexdigest()
+        except Exception as e:
+            logger.error(f"Error al hashear el registro: {str(e)}")
+            raise e
+
+async def save_request(id_paciente: int, datos_clinicos: DatosClinicos):
         """
         Registra el input original en 'ia_request'.
         Fundamental para trazavilidad y re-entrenamiento del modelo.
         """
         # 1. Generamos el hash del registro.
-        hash_request = self.generar_hash(id_paciente,datos_clinicos)        
+        hash_request = generar_hash(id_paciente,datos_clinicos)        
 
         try:
             # 2. Persistimos la información en la DB.
@@ -22,7 +45,7 @@ async def save_request(self,id_paciente: int, datos_clinicos: DatosClinicos):
         except Exception as e:
             logger.info(f"Error guardando datos en DB: {str(e)}")
 
-def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
+def total_request_paciente(id_paciente: int) -> RequestsPaciente:
     """
     Recuperar el historial de peticiones (inputs) enviadas a la IA para un paciente.
     """
@@ -51,7 +74,7 @@ def total_request_paciente(self, id_paciente: int) -> RequestsPaciente:
         logger.error(f"Error obteniendo requests IA: {str(e)}")
         raise ValueError("DB_ERROR")
 
-def total_resumenes_ia(self):
+def total_resumenes_ia():
         """
         Recupera el listado completo de todos los informes generados por la IA.
         Se utiliza principalmente para visitas administrativas o auditoria general.
@@ -77,7 +100,7 @@ def total_resumenes_ia(self):
             raise ValueError("DB_ERROR")
         
 
-def total_resumenes_ia_paciente(self, id_paciente: int) -> ResumenesPaciente:
+def total_resumenes_ia_paciente(id_paciente: int) -> ResumenesPaciente:
         """
         Consulta el historial de informes/resúmenes generados por la IA
         específicamente para un paciente.
@@ -108,7 +131,7 @@ def total_resumenes_ia_paciente(self, id_paciente: int) -> ResumenesPaciente:
             logger.error(f"Error obteniendo resumenes IA: {str(e)}")
             raise ValueError("DB_ERROR")
 
-def total_requests(self):
+def total_requests():
         """
         Recupera el historial global de todas las peticiones enviadas a la IA.
         Sirve para auditoria general y monitoreo del volumen de uso del sistema.
@@ -134,7 +157,7 @@ def total_requests(self):
             logger.error(f"Error obteniendo resumenes IA: {str(e)}")
             raise ValueError("DB_ERROR") 
 
-def eliminar_registro(self, id_registro : int):
+def eliminar_registro( id_registro : int):
         """
         Elimina un registro de auditoria de la 'ia_request'.
         Se utiliza para limpieza autómatica cuando la generación de la IA falla
@@ -163,7 +186,7 @@ def eliminar_registro(self, id_registro : int):
             logger.error(f"Error al intentar eliminar el registro {id_registro}: {str(e)}")
             raise ValueError("DB_ERROR")
 
-def registrar_metricas_db(self, resultado: str, segundos: float , error: str = None):
+def registrar_metricas_db(resultado: str, segundos: float , error: str = None):
         """
         Registra las metricas de rendimiento y auditoria del servicio IA.
         Se persisten latencia, tipo de respuesta (CACHE_HIT/CACHE_MISS/FALLO) y detalles de error
