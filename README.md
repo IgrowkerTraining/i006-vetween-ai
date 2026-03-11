@@ -55,11 +55,10 @@ i006-vetween-ai/
 │       └── test_ia.py             # Tests de funcionalidad del módulo de IA
 │
 ├── docs/                          # Documentación técnica del sistema
-│   ├── architecture.md            # Arquitectura general del sistema
-│   ├── interface-contract.md      # Contrato de interfaz entre backend Node y backend IA
-│   ├── sequence-diagram.md        # Diagrama de secuencia del flujo de generación de informes
-│   ├── ai-prompt-design.md        # Diseño y reglas del system prompt del modelo
-│   └── adr.md                     # Architectural Decision Records (decisiones técnicas)
+│   ├── arquitectura-ia.md            # Arquitectura general del sistema
+│   ├── contrato-interface-backend-ia.md      # Contrato de interfaz entre backend Node y backend IA
+│   ├── diagrama-secuencia.md        # Diagrama de secuencia del flujo de generación de informes
+│   └── diseño-prompt-ia.md        # Diseño y reglas del system prompt del modelo
 │
 ├── requirements.txt               # Dependencias del proyecto
 ├── Dockerfile                     # Imagen Docker de la aplicación
