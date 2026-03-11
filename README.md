@@ -489,6 +489,20 @@ El endpoint devuelve un resumen clínico generado por IA junto con una estructur
 
 El campo **`resumen_estructurado`** facilita el procesamiento por otros sistemas clínicos o dashboards.
 
+## Database
+
+PostgreSQL (Supabase)
+
+Tablas:
+
+- ia_request → registro de solicitudes a IA
+- resumen_ia → resultados generados
+- metricas_ia → métricas de ejecución
+
+Schema disponible en:
+
+database/schema.sql
+
 
 ## 🚀 Despliegue en Producción
 
