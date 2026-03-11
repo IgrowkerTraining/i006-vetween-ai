@@ -67,6 +67,12 @@ i006-vetween-ai/
 └── README.md                      # Documentación principal del repositorio
 ```
 
+## Arquitectura
+(ver docs/architecture.md)
+
+## Documentación técnica
+Toda la documentación detallada se encuentra en /docs
+
 ### 🛠️ Tecnologías Utilizadas
 
 ### ⚙️ Core Framework
