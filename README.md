@@ -54,11 +54,18 @@ i006-vetween-ai/
 │   └── test/                      # Tests del proyecto
 │       └── test_ia.py             # Tests de funcionalidad del módulo de IA
 │
+├── docs/                          # Documentación técnica del sistema
+│   ├── architecture.md            # Arquitectura general del sistema
+│   ├── interface-contract.md      # Contrato de interfaz entre backend Node y backend IA
+│   ├── sequence-diagram.md        # Diagrama de secuencia del flujo de generación de informes
+│   ├── ai-prompt-design.md        # Diseño y reglas del system prompt del modelo
+│   └── adr.md                     # Architectural Decision Records (decisiones técnicas)
+│
 ├── requirements.txt               # Dependencias del proyecto
 ├── Dockerfile                     # Imagen Docker de la aplicación
 ├── docker-compose.yml             # Orquestación de servicios con Docker Compose
 ├── env.example                    # Plantilla de variables de entorno
-└── README.md                      # Documentación del proyecto
+└── README.md                      # Documentación principal del repositorio
 ```
 
 ### 🛠️ Tecnologías Utilizadas
