@@ -100,7 +100,7 @@ Este servicio está diseñado como un **servicio especializado de generación de
 ---
 
 # 4. Flujo de Generación de Resumen
-
+```
 Usuario
 │
 ▼
@@ -130,7 +130,7 @@ Microservicio IA
 Devolver resumen
 
 
-
+```
 ---
 
 # 5. Persistencia de Datos
