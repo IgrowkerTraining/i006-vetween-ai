@@ -19,29 +19,24 @@ Esta separación permite:
 
 
 Frontend
-│
-▼
-Backend Node.js
-(API principal)
-│
-│ HTTP REST
-▼
-Microservicio IA
-(Python + FastAPI)
-│
-├── Validación de datos clínicos
-├── Generación de hash de request
-├── Control de cache
-├── Lógica de generación IA
-│
-▼
-Proveedor de LLM
-(OpenRouter / NVIDIA NIM)
-
-│
-▼
-Base de datos
-(Supabase / PostgreSQL)
+   │
+   ▼
+Backend Node.js (API principal)
+   │
+   │ HTTP REST
+   ▼
+Microservicio IA (Python + FastAPI)
+   │
+   ├─ Validación de datos clínicos
+   ├─ Generación de hash de request
+   ├─ Control de cache
+   └─ Lógica de generación con IA
+   │
+   ▼
+Proveedor de LLM (OpenRouter / NVIDIA NIM)
+   │
+   ▼
+Base de datos (Supabase / PostgreSQL)
 
 
 ---
