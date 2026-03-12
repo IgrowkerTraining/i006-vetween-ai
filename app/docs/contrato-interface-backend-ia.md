@@ -26,7 +26,7 @@ Microservicio Python IA (FastAPI)
 │
 ├─ LLM Provider (OpenRouter / NVIDIA NIM)
 └─ Supabase (persistencia)
-
+```
 
 ## Responsabilidades
 
@@ -36,7 +36,7 @@ Microservicio Python IA (FastAPI)
 | Backend Node.js | Orquestación del sistema, autenticación, lógica de negocio |
 | Backend Python IA | Generación de resúmenes clínicos con LLM |
 | Base de datos | Persistencia de requests y resultados |
-```
+
 ---
 
 # 3. Endpoint Principal
