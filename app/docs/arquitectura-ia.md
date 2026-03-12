@@ -17,7 +17,7 @@ Esta separación permite:
 
 # 2. Arquitectura General
 
-
+```
 Frontend
    │
    ▼
@@ -38,7 +38,7 @@ Proveedor de LLM (OpenRouter / NVIDIA NIM)
    ▼
 Base de datos (Supabase / PostgreSQL)
 
-
+```
 ---
 
 # 3. Componentes del Sistema
