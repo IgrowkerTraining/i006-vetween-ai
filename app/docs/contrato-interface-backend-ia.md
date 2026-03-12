@@ -14,6 +14,7 @@ El backend **Node.js** actúa como **cliente del servicio de IA**, mientras que 
 ---
 
 # 2. Arquitectura General
+```
 Frontend
 │
 ▼
@@ -35,7 +36,7 @@ Microservicio Python IA (FastAPI)
 | Backend Node.js | Orquestación del sistema, autenticación, lógica de negocio |
 | Backend Python IA | Generación de resúmenes clínicos con LLM |
 | Base de datos | Persistencia de requests y resultados |
-
+```
 ---
 
 # 3. Endpoint Principal
