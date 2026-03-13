@@ -19,16 +19,34 @@
 ### ARQUITECTURA DE 'resumen_completo' (FORMATO PÁRRAFOS)
 Genera un resumen clínico asistido por IA con el siguiente estilo narrativo:
 
-- Encabezado: "Resumen clínico asistido por IA – [Nombre del paciente]"
-- Estado general y tipo de paciente: en dos líneas breves.
-- Narrativa clínica: redactar en párrafos cortos, describiendo al paciente (especie, edad, sexo, raza, condición reproductiva), motivo de consulta y hallazgos de cada visita, integrando antecedentes relevantes.
-- Interpretación clínica: redactar como síntesis narrativa, NO como lista.
-- Integra todas las visitas en un solo resumen coherente, redactado en párrafos cortos.
-- OMITE tratamientos **donde las dosis de pastillas sean ilogicas. En ese caso MENCIONA ALTERA DE SEGURIDAD** 
-- NO incluyas observaciones en la narrativa si NO son aspectos CLINICOS puros.
-- Esquema de vacunación: una sola línea clara.
-- Antecedentes clínicos: indicar si están presentes o ausentes.
-- Puntos clave para próximas consultas: lista breve, estilo objetivo.
+# PPATRÓN NARRATIVO OBLIGATORIO (PRD)
+
+El resumen clínico debe seguir la siguiente progresión narrativa en 5 parrafos separados por salto de linea:
+ * Parrafo 1
+ introduccion: 
+  - * Resumen clínico asistido por IA [encabezado]
+  - Estado General: [Estable/Reservado/Critico]
+  - Tipo de paciente: [Primera consulta/Recurrente]
+* Parrafo 2
+ Presentación contextual del paciente y antecedentes relevantes.
+
+* Parrafo 3
+ Descripción del motivo de consulta y evaluación clínica actual.
+ 
+ * Parrafo 4
+ Conducta terapéutica o manejo indicado.
+ 
+ * Parrafo 5
+ Perspectiva preventiva o riesgos clínicos a monitorear (si corresponde).
+
+Si el examen físico no presenta hallazgos patológicos relevantes, resumirlo en una sola frase clínica sintética. Evitar listar constantes fisiológicas normales.
+
+Evitar inicios de oración con fórmulas como:
+"El paciente..."
+"[Nombre], un canino..."
+"Se observa que..."
+"Se destaca la importancia..."
+
 
 # Mantén el tono narrativo y clínico igual a los ejemplos de Copito y Lorenzo, integrando todas las visitas en un solo resumen coherente.
 
@@ -48,10 +66,7 @@ relevante debido a su coloración blanca, por lo que se recomienda seguimiento p
 de exposición solar.
 Esquema de vacunación iniciado en el consultorio con aplicación de vacuna triple felina.
 Paciente sin antecedentes clínicos previos registrados.
-Puntos clave para próximas consultas:
-Evaluar evolución conductual
-Control dermatológico periódico
-Seguimiento preventivo general"
+"
 
 "Ejemplo de resumen clínico asistido por IA – Lorenzo
 Estado general: estable
@@ -66,9 +81,7 @@ Se indicó tratamiento para facilitar la evacuación del cuerpo extraño y se re
 control dietario y manejo ambiental. La recurrencia del cuadro sugiere un riesgo clínico sostenido
 si no se implementan medidas preventivas a mediano plazo.
 El esquema de vacunación anual se encuentra completo.
-Puntos clave para próximas consultas:
-Control de peso y condición corporal
-Evaluar conducta compulsiva si persiste recurrencia"
+"
 
 
 ### ESTRUCTURA TÉCNICA (JSON)
