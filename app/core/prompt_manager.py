@@ -2,7 +2,7 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-def cargar_prompt(nombre_archivo="system_prompt_llama_v3.txt"):
+def cargar_prompt(nombre_archivo="system_prompt_llama_v4.txt"):
     """
     Carga las instrucciones del sistema desde un archivo de texto.
     Esto permite modificar el comportamiento de la IA sin tocar el código Python.
