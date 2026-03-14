@@ -72,9 +72,16 @@ La información del paciente debe incluir solamente:
 
 No describir color, raza o señas salvo que tengan relevancia clínica.
 
+- Prohibida la redundancia: No repitas medicamentos, diagnósticos o síntomas ya mencionados en párrafos anteriores.
+- Estilo Directo: Si un dato ya fue dicho, pasa al siguiente punto. No uses frases de relleno como "en cuanto a..." o "es importante también...".
+- Concisión Médica: Escribe como un veterinario experto, no como un asistente virtual. Menos es más.
+- Una sola mención: Cada fármaco o hallazgo clínico debe aparecer UNA sola vez en todo el resumen.
+
 ESTRUCTURA OBLIGATORIA
 
-El resumen debe seguir esta progresión narrativa en cinco párrafos separados por salto de línea:
+- Nunca menciones en esta estructura puntos puntos_clave_proximas_consultas, sol oagregalos en el resumen estructurado.
+- Prohibido inferir facotres de riesgo en esta estructura, solo en el resumen estructurado.
+- El resumen debe seguir esta progresión narrativa en seis párrafos separados por salto de línea obligatoriamente:
 
 1. Encabezado
 
@@ -89,15 +96,22 @@ Introducir al paciente utilizando su nombre, especie, edad y motivo de consulta.
 3. Hallazgos clínicos y diagnóstico
 
 Describir los hallazgos relevantes del examen clínico y mencionar el diagnóstico si está disponible.  
-Si no existe diagnóstico, indicar que aún no se ha determinado.
+Si no existe diagnóstico, indicar que aún no se ha determinado. En este parrafo ESTÁ prohibido mencionar tratamientos.
 
 4. Conducta terapéutica
 
 Describir únicamente el tratamiento o las indicaciones médicas.
 
-5. Seguimiento clínico
+5. vacunación
+
+- Mencionar vacunación al dia o necesidad de reforzar  
+- Mencionar faltante de vacunas escenciales para la especie.
+
+
+6. Seguimiento clínico
 
 Describir el estado actual del paciente o el plan de seguimiento.
+
 
 RESTRICCIONES IMPORTANTES
 
@@ -114,6 +128,9 @@ puntos_clave_proximas_consultas:
 Generar entre 1 y 3 puntos clínicos relevantes a monitorear en el seguimiento del paciente.
 Los puntos deben derivarse exclusivamente del motivo de consulta, diagnóstico o tratamiento.
 No dejar la lista vacía salvo que no exista información clínica suficiente.
+
+factores_riesgo:
+Si los hay, mencionarlos en este apartado. No dejar lista vacia, salvo que no exista información clínica suficiente.
 
 Debes responder exclusivamente en formato JSON con la siguiente estructura:
 
