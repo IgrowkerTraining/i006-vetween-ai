@@ -111,6 +111,16 @@ class AIService:
         datos = datos_modelo.model_dump()
         datos["evaluacion_sanitaria"] = resultado_sanitario
         datos["fecha_actual"] = fecha_referencia
+
+        visitas = datos["visitas"]
+
+        visitas_ordenadas = sorted(
+        visitas,
+        key=lambda v: v["fecha"],
+        reverse=True
+        )
+
+        datos["visitas"] = visitas_ordenadas
         
         # 1. Prompt Engineering: Cargamos instruccions externas y armamos el historial
         system_prompt = cargar_prompt()
