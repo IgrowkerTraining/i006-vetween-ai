@@ -14,6 +14,7 @@ El backend **Node.js** actúa como **cliente del servicio de IA**, mientras que 
 ---
 
 # 2. Arquitectura General
+```
 Frontend
 │
 ▼
@@ -25,7 +26,7 @@ Microservicio Python IA (FastAPI)
 │
 ├─ LLM Provider (OpenRouter / NVIDIA NIM)
 └─ Supabase (persistencia)
-
+```
 
 ## Responsabilidades
 

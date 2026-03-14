@@ -17,33 +17,28 @@ Esta separación permite:
 
 # 2. Arquitectura General
 
-
+```
 Frontend
-│
-▼
-Backend Node.js
-(API principal)
-│
-│ HTTP REST
-▼
-Microservicio IA
-(Python + FastAPI)
-│
-├── Validación de datos clínicos
-├── Generación de hash de request
-├── Control de cache
-├── Lógica de generación IA
-│
-▼
-Proveedor de LLM
-(OpenRouter / NVIDIA NIM)
+   │
+   ▼
+Backend Node.js (API principal)
+   │
+   │ HTTP REST
+   ▼
+Microservicio IA (Python + FastAPI)
+   │
+   ├─ Validación de datos clínicos
+   ├─ Generación de hash de request
+   ├─ Control de cache
+   └─ Lógica de generación con IA
+   │
+   ▼
+Proveedor de LLM (OpenRouter / NVIDIA NIM)
+   │
+   ▼
+Base de datos (Supabase / PostgreSQL)
 
-│
-▼
-Base de datos
-(Supabase / PostgreSQL)
-
-
+```
 ---
 
 # 3. Componentes del Sistema
@@ -105,7 +100,7 @@ Este servicio está diseñado como un **servicio especializado de generación de
 ---
 
 # 4. Flujo de Generación de Resumen
-
+```
 Usuario
 │
 ▼
@@ -135,7 +130,7 @@ Microservicio IA
 Devolver resumen
 
 
-
+```
 ---
 
 # 5. Persistencia de Datos
