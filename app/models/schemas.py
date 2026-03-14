@@ -47,7 +47,7 @@ class Vacunas(BaseModel):
     observacion: Optional[str] = None
 
 class DatosClinicos(BaseModel):
-    """Contenedor de toa la historia clinica para enviar a la IA."""
+    """Contenedor de toda la historia clinica para enviar a la IA."""
     paciente: Paciente
     visitas: List[Visitas]
     vacunas: List[Vacunas]
