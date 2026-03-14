@@ -22,7 +22,7 @@ class Paciente(BaseModel):
     sexo: str
     raza: str
     color: str
-    senia: str
+    senia: Optional[str] = None
     peso: int | float
     # Permitimos NoNe para que la API no falle si el dato no viene del Frontend.
     # La IA usará este 'null' para sugerir completar la ficha.
