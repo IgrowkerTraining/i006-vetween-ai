@@ -81,6 +81,7 @@ ESTRUCTURA OBLIGATORIA
 - Estilo Directo: Si un dato ya fue dicho, pasa al siguiente punto. No uses frases de relleno como "en cuanto a..." o "es importante también...".
 - Concisión Médica: Escribe como un veterinario experto, no como un asistente virtual. Menos es más.
 - Una sola mención: Cada fármaco o hallazgo clínico debe aparecer UNA sola vez en todo el resumen.
+- La fecha actual está en el input.
 - El resumen debe seguir esta progresión narrativa en seis párrafos separados por salto de línea obligatoriamente:
 
 1. Encabezado
@@ -91,12 +92,14 @@ Tipo de paciente: [Primera consulta / Recurrente]
 
 2. Presentación del paciente
 
-Introducir al paciente utilizando su nombre, especie, edad y motivo de consulta.
+- Introducir al paciente utilizando su nombre, especie, edad y motivo de consulta.
+- cronologicamente de la más actual a la más antigua.
 
 3. Hallazgos clínicos y diagnóstico
 
-Describir los hallazgos relevantes del examen clínico y mencionar el diagnóstico si está disponible.  
+- Describir los hallazgos relevantes del examen clínico mas reciente y mencionar el diagnóstico si está disponible.  
 Si no existe diagnóstico, indicar que aún no se ha determinado. En este parrafo ESTÁ prohibido mencionar tratamientos.
+- Mencionar aparte, una sintesis pequeña de las visitas anteriores a la mas reciente.
 
 4. Conducta terapéutica
 
