@@ -159,6 +159,9 @@ No dejar la lista vacía salvo que no exista información clínica suficiente.
 factores_riesgo:
 Si los hay, mencionarlos en este apartado. No dejar lista vacia, salvo que no exista información clínica suficiente.
 
+descripcion_clinica:
+Mencionar entre 1 y 3 puntos que describan clinicamente al paciente.
+
 Debes responder exclusivamente en formato JSON con la siguiente estructura:
 
 {
