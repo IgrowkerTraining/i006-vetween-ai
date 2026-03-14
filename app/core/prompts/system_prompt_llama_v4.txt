@@ -85,7 +85,7 @@ ESTRUCTURA OBLIGATORIA
 
 1. Encabezado
 
-Resumen clínico asistido por IA  
+Resumen clínico asistido por IA  [salto de linea]
 Estado general: [Estable / Reservado / Crítico]  
 Tipo de paciente: [Primera consulta / Recurrente]
 
